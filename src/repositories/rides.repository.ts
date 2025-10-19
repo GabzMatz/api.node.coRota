@@ -17,6 +17,11 @@ export class RidesRepository {
     })) as Ride[];
   }
 
+  public async getById(id: string): Promise<Ride | null> {
+    const doc = await this.collection.doc(id).get();
+    return doc.data() as Ride ?? null;
+  }
+
   public async getRidesByUserId(userId: string): Promise<Ride[]> {
     const driverSnapshot = await this.collection
       .where("driverId", "==", userId)

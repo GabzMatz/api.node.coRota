@@ -2,6 +2,7 @@ import { RidesRepository } from "../repositories/rides.repository.js";
 import { LatLng } from "../models/base.model.js";
 import { MapService } from "./mapbox.service.js";
 import { Ride } from "../models/ride.model.js";
+import { NotFoundError } from "../errors/not-found.error.js";
 
 const MEET_THRESHOLD_METERS = Number(process.env.MEET_THRESHOLD_METERS || 3000);
 
@@ -18,8 +19,36 @@ export class RidesService {
     return await this.ridesRepository.getAll();
   }
 
+  public async getById(id: string): Promise<Ride> {
+    const ride = await this.ridesRepository.getById(id);
+
+    if (!ride) {
+        throw new NotFoundError("Corrida não encontrada!");
+    }
+
+    return ride;
+  }
+
   public async create(ride: Ride): Promise<void> {
     await this.ridesRepository.create(ride);
+  }
+
+  public async update(id: string, ride: Ride): Promise<void> {
+    const _ride = await this.getById(id);
+    
+    _ride.updatedAt = new Date();
+    _ride.createdAt = ride.createdAt;
+    _ride.isActive = ride.isActive;
+    _ride.driverId = ride.driverId;
+    _ride.departureLatLng = ride.departureLatLng;
+    _ride.destinationLatLng = ride.destinationLatLng;
+    _ride.date = ride.date;
+    _ride.time = ride.time;
+    _ride.availableSeats = ride.availableSeats;
+    _ride.pricePerPassenger = ride.pricePerPassenger;
+    _ride.passengerIds = ride.passengerIds;
+        
+    await this.ridesRepository.update(_ride);
   }
 
   public async suggestRides(origin: LatLng, destination: LatLng): Promise<Ride[]> {

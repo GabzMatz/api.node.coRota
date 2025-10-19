@@ -7,11 +7,23 @@ export class RidesController {
     res.status(200).send(await new RidesService().getAll());
   }
 
+  public static async getById(req: Request, res: Response, next: NextFunction) {
+    res.status(200).send(await new RidesService().getAll());
+  }
+
   public static async create(req: Request, res: Response, next: NextFunction) {
     await new RidesService().create(req.body);
 
     res.status(201).send({
       message: "Corrida criada com sucesso!"
+    });
+  }
+
+  public static async update(req: Request, res: Response, next: NextFunction) {
+    await new RidesService().create(req.body);
+
+    res.status(201).send({
+      message: "Corrida atualizada com sucesso!"
     });
   }
 
