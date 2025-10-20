@@ -1,8 +1,9 @@
 import { RidesRepository } from "../repositories/rides.repository.js";
 import { LatLng } from "../models/base.model.js";
 import { MapService } from "./mapbox.service.js";
-import { Ride } from "../models/ride.model.js";
+import { Ride, SearchRide } from "../models/ride.model.js";
 import { NotFoundError } from "../errors/not-found.error.js";
+import { ValidationError } from "../errors/validation.error.js";
 
 const MEET_THRESHOLD_METERS = Number(process.env.MEET_THRESHOLD_METERS || 3000);
 
@@ -16,7 +17,9 @@ export class RidesService {
   private mapboxService: MapService;
 
   public async getAll(): Promise<Ride[]> {
-    return await this.ridesRepository.getAll();
+    const rides = await this.ridesRepository.getAll();
+
+    return rides.filter(ride => ride.isActive === true  && ride.availableSeats > 0);
   }
 
   public async getById(id: string): Promise<Ride> {
@@ -30,6 +33,7 @@ export class RidesService {
   }
 
   public async create(ride: Ride): Promise<void> {
+    ride.availableSeats = ride.allSeats;
     await this.ridesRepository.create(ride);
   }
 
@@ -44,6 +48,7 @@ export class RidesService {
     _ride.destinationLatLng = ride.destinationLatLng;
     _ride.date = ride.date;
     _ride.time = ride.time;
+    _ride.allSeats = ride.allSeats;
     _ride.availableSeats = ride.availableSeats;
     _ride.pricePerPassenger = ride.pricePerPassenger;
     _ride.passengerIds = ride.passengerIds;
@@ -51,15 +56,42 @@ export class RidesService {
     await this.ridesRepository.update(_ride);
   }
 
-  public async suggestRides(origin: LatLng, destination: LatLng): Promise<Ride[]> {
-    if (!origin || !destination) {
+  public async chooseRide(userId: string, rideId: string): Promise<void> {
+    const _ride = await this.getById(rideId);
+
+    if (_ride.allSeats <= _ride.availableSeats)
+      throw new ValidationError("O carro não tem mais assentos disponíveis!");
+
+    _ride.updatedAt = new Date();
+    _ride.availableSeats = _ride.availableSeats--;
+    _ride.passengerIds?.push(userId);
+        
+    await this.ridesRepository.update(_ride);
+  }
+
+  public async cancelRide(userId: string, rideId: string): Promise<void> {
+    const _ride = await this.getById(rideId);
+
+    _ride.updatedAt = new Date();
+    _ride.availableSeats = _ride.availableSeats++;
+    _ride.passengerIds = _ride.passengerIds?.filter(id => id !== userId);
+        
+    await this.ridesRepository.update(_ride);
+  }
+
+  public async suggestRides(search: SearchRide): Promise<Ride[]> {
+    if (!search.departureLatLng || !search.destinationLatLng) {
       throw new Error("origin and destination are required.");
     }
 
-    const rides = await this.ridesRepository.getAll();
+    const now = new Date();
+    const rides = await this.getAll();
     const matches: Ride[] = [];
 
     for (const ride of rides) {
+      const rideDateTime = new Date(`${ride.date}T${ride.time}`);
+      if (rideDateTime <= now) continue;
+  
       const driverOrigin: LatLng = ride.departureLatLng;
       const driverDestination: LatLng = ride.destinationLatLng;
 
@@ -69,7 +101,7 @@ export class RidesService {
       const origDistance = origDir.routes?.[0]?.distance ?? Infinity;
 
       // Passanger pickup point route
-      const withPickupCoords = `${driverOrigin[1]},${driverOrigin[0]};${origin[1]},${origin[0]};${driverDestination[1]},${driverDestination[0]}`;
+      const withPickupCoords = `${driverOrigin[1]},${driverOrigin[0]};${search.departureLatLng[1]},${search.departureLatLng[0]};${driverDestination[1]},${driverDestination[0]}`;
       const withPickupDir = await this.mapboxService.getDirections(withPickupCoords, "driving");
       const withPickupDistance = withPickupDir.routes?.[0]?.distance ?? Infinity;
 

@@ -4,7 +4,7 @@ import { RidesController } from "../controllers/rides.controller.js";
 import { GeocodeController } from "../controllers/geocode.controller.js";
 import asyncHandler from "express-async-handler";
 import { celebrate, Segments } from "celebrate";
-import { rideSchema } from "../models/ride.model.js";
+import { rideSchema, searchRideSchema } from "../models/ride.model.js";
 
 const ridesRoute = express.Router();
 const base = "/ride";
@@ -13,7 +13,7 @@ const base = "/ride";
 
 ridesRoute.get(`${base}/geocode`, asyncHandler(GeocodeController.search));
 ridesRoute.post(`${base}/meeting-point`, asyncHandler(MeetingController.calculate));
-ridesRoute.post(`${base}/suggest-rides`, asyncHandler(RidesController.suggest));
+ridesRoute.post(`${base}/suggest-rides`, celebrate({ [Segments.BODY]: searchRideSchema}), asyncHandler(RidesController.suggest));
 
 //#endregion
 
@@ -21,6 +21,10 @@ ridesRoute.post(`${base}/suggest-rides`, asyncHandler(RidesController.suggest));
 
 ridesRoute.post(`${base}`, celebrate({ [Segments.BODY]: rideSchema}), asyncHandler(RidesController.create));
 ridesRoute.get(`${base}`, asyncHandler(RidesController.getAll));
+ridesRoute.get(`${base}/:id`, asyncHandler(RidesController.getById));
+ridesRoute.put(`${base}`, celebrate({ [Segments.BODY]: rideSchema}), asyncHandler(RidesController.update));
+ridesRoute.put(`${base}/:rideId/choose/:userId`, asyncHandler(RidesController.chooseRide));
+ridesRoute.put(`${base}/:rideId/calcel/:userId`, asyncHandler(RidesController.cancelPassengerRide));
 
 //#endregion
 

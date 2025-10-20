@@ -7,6 +7,7 @@ export interface Ride extends Base {
   destinationLatLng: LatLng;
   date: Date;
   time: string;
+  allSeats: number;
   availableSeats: number;
   pricePerPassenger: number;
   passengerIds?: string[];
@@ -22,6 +23,13 @@ export interface Route {
   long: number;
 }
 
+export interface SearchRide {
+  departureLatLng: LatLng;
+  destinationLatLng: LatLng;
+  date: Date;
+  time: string;
+}
+
 export const rideSchema = Joi.object().keys({
   driverId: Joi.string().required(),
   departureLatLng: Joi.array().items(Joi.number()).required(),
@@ -34,3 +42,9 @@ export const rideSchema = Joi.object().keys({
   isActive: Joi.boolean().default(true),
 });
 
+export const searchRideSchema = Joi.object().keys({
+  departureLatLng: Joi.array().items(Joi.number()).required(),
+  destinationLatLng: Joi.array().items(Joi.number()).required(),
+  date: Joi.date().required(),
+  time: Joi.string().required(),
+});
