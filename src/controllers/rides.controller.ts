@@ -53,8 +53,8 @@ export class RidesController {
   public static async suggest(req: Request, res: Response, next: NextFunction) {
     const search = req.body as SearchRide;
 
-    const matches = await new RidesService().suggestRides(search);
+    const data = await new RidesService().suggestRides(search);
 
-    res.status(200).send({ matches });
+    res.status(200).send({ data });
   }
 }

@@ -6,13 +6,14 @@ import { createUserSchema, updateUserSchema } from "../models/user.model.js";
 import { idSchema } from "../models/base.model.js";
 
 export const usersRoute = Router();
+const base = "/users";
 
-usersRoute.get("/users", asyncHandler(UsersController.getAll));
+usersRoute.get(`${base}`, asyncHandler(UsersController.getAll));
 
-usersRoute.get("/users/:id", celebrate({ [Segments.PARAMS]: idSchema }), asyncHandler(UsersController.getById));
+usersRoute.get(`${base}/:id`, celebrate({ [Segments.PARAMS]: idSchema }), asyncHandler(UsersController.getById));
 
-usersRoute.post("/users", celebrate({ [Segments.BODY]: createUserSchema }), asyncHandler(UsersController.create));
+usersRoute.post(`${base}`, celebrate({ [Segments.BODY]: createUserSchema }), asyncHandler(UsersController.create));
 
-usersRoute.put("/users/:id", celebrate({ [Segments.PARAMS]: idSchema, [Segments.BODY]: updateUserSchema }), asyncHandler(UsersController.update));
+usersRoute.put(`${base}/:id`, celebrate({ [Segments.PARAMS]: idSchema, [Segments.BODY]: updateUserSchema }), asyncHandler(UsersController.update));
 
-usersRoute.delete("/users/:id", celebrate({ [Segments.PARAMS]: idSchema }), asyncHandler(UsersController.delete));
+usersRoute.delete(`${base}/:id`, celebrate({ [Segments.PARAMS]: idSchema }), asyncHandler(UsersController.delete));

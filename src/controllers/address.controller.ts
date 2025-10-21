@@ -13,10 +13,11 @@ export class AddressController {
   }
 
   public static async create(req: Request, res: Response, next: NextFunction) {
-    await new AddressRepository().create(req.body);
+    const data = await new AddressRepository().create(req.body);
 
     res.status(201).send({
-      message: "Endereço criado com sucesso!"
+      message: "Endereço criado com sucesso!",
+      data
     });
   }
 

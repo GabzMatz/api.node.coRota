@@ -24,7 +24,8 @@ export const createUserSchema = Joi.object().keys({
   companyId: Joi.string().required(),
   addressId: Joi.string().required(),
   workSchedule: Joi.date().optional(),
-  hasCar: Joi.boolean().required().default(false)
+  hasCar: Joi.boolean().required().default(false),
+  isActive: Joi.boolean().default(true)
 });
 
 export const updateUserSchema = Joi.object().keys({
@@ -37,7 +38,8 @@ export const updateUserSchema = Joi.object().keys({
   addressId: Joi.string().required(),
   hasCar: Joi.boolean().required(),
   workSchedule: Joi.date().optional(),
-  password: Joi.string().min(6).optional()
+  password: Joi.string().min(6).optional(),
+  isActive: Joi.boolean().default(true)
 });
 
 export const loginSchema = Joi.object().keys({

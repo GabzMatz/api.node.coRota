@@ -29,6 +29,7 @@ export class UserService {
   public async create(user: User): Promise<void> {
     const userAuth = await this.authService.create(user);
     user.id = userAuth.uid;
+    user.createdAt = new Date();
 
     await this.userRepository.update(user);
     await this.authService.verifyEmail(user.corporateEmail);

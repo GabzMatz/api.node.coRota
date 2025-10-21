@@ -23,4 +23,5 @@ export const addressSchema = Joi.object().keys({
   lat: Joi.string().required(),
   long: Joi.string().required(),
   complement: Joi.string().optional(),
+  isActive: Joi.boolean().default(true)
 });

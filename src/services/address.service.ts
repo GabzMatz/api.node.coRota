@@ -24,6 +24,7 @@ export class AddressService {
   }
 
   public async create(address: Address): Promise<void> {
+    address.createdAt = new Date();
     await this.addressRepository.create(address);
   }
 

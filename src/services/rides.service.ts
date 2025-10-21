@@ -34,6 +34,7 @@ export class RidesService {
 
   public async create(ride: Ride): Promise<void> {
     ride.availableSeats = ride.allSeats;
+    ride.createdAt = new Date();
     await this.ridesRepository.create(ride);
   }
 

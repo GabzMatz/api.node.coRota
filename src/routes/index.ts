@@ -3,6 +3,7 @@ import ridesRoute from "./rides.routes.js";
 import addressRoute from "./address.routes.js";
 import { authRoute } from "./auth.route.js";
 import { usersRoute } from "./user.route.js";
+import companyRoute from "./company.routes.js";
 
 export const routes = (app: express.Express) => {
   app.use(express.json()); 
@@ -10,6 +11,7 @@ export const routes = (app: express.Express) => {
     authRoute,
     usersRoute,
     ridesRoute,
+    companyRoute,
     addressRoute
   );
 }
