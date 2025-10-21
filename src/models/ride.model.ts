@@ -48,3 +48,8 @@ export const searchRideSchema = Joi.object().keys({
   date: Joi.date().required(),
   time: Joi.string().required(),
 });
+
+export const rideIdsSchema = Joi.object({
+  rideId: Joi.string().alphanum().required(),
+  userId: Joi.string().alphanum().required()
+});
