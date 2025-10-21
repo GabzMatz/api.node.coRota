@@ -10,8 +10,11 @@ const addressRoute = express.Router();
 const base = "/address";
 
 addressRoute.post(`${base}`, celebrate({ [Segments.BODY]: addressSchema}), asyncHandler(AddressController.create));
+
 addressRoute.get(`${base}`, asyncHandler(AddressController.getAll));
+
 addressRoute.get(`${base}/:id`, celebrate({ [Segments.PARAMS]: idSchema }), asyncHandler(AddressController.getById));
+
 addressRoute.put(`${base}`, celebrate({ [Segments.BODY]: addressSchema}), asyncHandler(AddressController.update));
 
 export default addressRoute;
