@@ -9,8 +9,8 @@ export interface Address extends Base {
   state: string;
   zipCode: string;
   complement?: string;
-  lat?: string;
-  long?: string;
+  lat: string;
+  long: string;
 }
 
 export const addressSchema = Joi.object().keys({
@@ -20,7 +20,7 @@ export const addressSchema = Joi.object().keys({
   city: Joi.string().required(),
   state: Joi.string().required(),
   zipCode: Joi.string().required(),
+  lat: Joi.string().required(),
+  long: Joi.string().required(),
   complement: Joi.string().optional(),
-  lat: Joi.string().optional(),
-  long: Joi.string().optional(),
 });
