@@ -6,7 +6,7 @@ import { UserService } from "../services/user.service.js";
 
 export const auth = (app: express.Express) => {
   app.use(async (req: Request, res: Response, next: NextFunction) => {
-    if (req.method === 'POST' && (req.url.startsWith("/auth/login") || req.url.startsWith("/auth/recovery"))) {
+    if (req.method === 'POST' && (req.url.startsWith("/auth/login") || req.url.startsWith("/auth/recovery") || req.url.startsWith("/users/register"))) {
       return next();
     }
     
@@ -21,6 +21,10 @@ export const auth = (app: express.Express) => {
 
       if (!user)
         return next(new ForbiddenError());
+      
+      (req as any).user = {
+        id: decodedIdToken.uid
+      };
       
       return next();  
     } catch (error) {

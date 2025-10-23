@@ -14,7 +14,8 @@ export class RidesController {
   }
 
   public static async create(req: Request, res: Response, next: NextFunction) {
-    await new RidesService().create(req.body);
+    const userId = req.user?.id; 
+    await new RidesService().create(req.body, userId);
 
     res.status(201).send({
       message: "Corrida criada com sucesso!"
@@ -44,6 +45,16 @@ export class RidesController {
     const rideId = req.params.rideId;
     const userId = req.params.userId;
     await new RidesService().cancelRide(userId, rideId);
+
+    res.status(201).send({
+      message: "Corrida cancelada com sucesso!"
+    });
+  }
+
+  public static async cancelDriverRide(req: Request, res: Response, next: NextFunction) {
+    const rideId = req.params.rideId;
+    const userId = req.params.userId;
+    await new RidesService().driverCancelRide(userId, rideId);
 
     res.status(201).send({
       message: "Corrida cancelada com sucesso!"

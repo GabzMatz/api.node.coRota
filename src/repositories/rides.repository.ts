@@ -40,8 +40,10 @@ export class RidesRepository {
     })) as Ride[];
   }
 
-  public async create(ride: Ride): Promise<void> {
-    await this.collection.add(ride);
+  public async create(ride: Ride): Promise<Ride> {
+    const ref = await this.collection.add(ride); 
+    const snapshot = await ref.get(); 
+    return { ...(snapshot.data() as Ride), id: ref.id };
   }
 
   public async update(ride: Ride): Promise<void> {

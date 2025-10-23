@@ -12,7 +12,7 @@ usersRoute.get(`${base}`, asyncHandler(UsersController.getAll));
 
 usersRoute.get(`${base}/:id`, celebrate({ [Segments.PARAMS]: idSchema }), asyncHandler(UsersController.getById));
 
-usersRoute.post(`${base}`, celebrate({ [Segments.BODY]: createUserSchema }), asyncHandler(UsersController.create));
+usersRoute.post(`${base}/register`, celebrate({ [Segments.BODY]: createUserSchema }), asyncHandler(UsersController.create));
 
 usersRoute.put(`${base}/:id`, celebrate({ [Segments.PARAMS]: idSchema, [Segments.BODY]: updateUserSchema }), asyncHandler(UsersController.update));
 

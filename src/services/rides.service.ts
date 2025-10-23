@@ -4,6 +4,8 @@ import { MapService } from "./mapbox.service.js";
 import { Ride, SearchRide } from "../models/ride.model.js";
 import { NotFoundError } from "../errors/not-found.error.js";
 import { ValidationError } from "../errors/validation.error.js";
+import { RideRole, RidesHistory, RideStatus } from "../models/rides-history.model.js";
+import { RidesHistoryService } from "./rides-history.service.js";
 
 const MEET_THRESHOLD_METERS = Number(process.env.MEET_THRESHOLD_METERS || 3000);
 
@@ -11,10 +13,12 @@ export class RidesService {
   constructor() {
     this.mapboxService = new MapService();
     this.ridesRepository = new RidesRepository();
+    this.ridesHistoryService = new RidesHistoryService();
   }
   
   private ridesRepository: RidesRepository;
   private mapboxService: MapService;
+  private ridesHistoryService: RidesHistoryService;
 
   public async getAll(): Promise<Ride[]> {
     const rides = await this.ridesRepository.getAll();
@@ -32,10 +36,21 @@ export class RidesService {
     return ride;
   }
 
-  public async create(ride: Ride): Promise<void> {
+  public async create(ride: Ride, userId: string): Promise<void> {
     ride.availableSeats = ride.allSeats;
     ride.createdAt = new Date();
-    await this.ridesRepository.create(ride);
+    const _ride = await this.ridesRepository.create(ride);
+
+    const payload = {
+      ride: _ride,
+      rideId: _ride.id,
+      status: RideStatus.PENDING,
+      isActive: true,
+      role: RideRole.DRIVER,
+      userId: userId
+    } as RidesHistory;
+
+    await this.ridesHistoryService.create(payload);
   }
 
   public async update(id: string, ride: Ride): Promise<void> {
@@ -58,31 +73,54 @@ export class RidesService {
   }
 
   public async chooseRide(userId: string, rideId: string): Promise<void> {
-    const _ride = await this.getById(rideId);
+    const ride = await this.getById(rideId);
 
-    if (_ride.allSeats <= _ride.availableSeats)
+    if (ride.allSeats <= ride.availableSeats)
       throw new ValidationError("O carro não tem mais assentos disponíveis!");
 
-    _ride.updatedAt = new Date();
-    _ride.availableSeats = _ride.availableSeats--;
-    _ride.passengerIds?.push(userId);
+    ride.updatedAt = new Date();
+    ride.availableSeats = ride.availableSeats--;
+    ride.passengerIds?.push(userId);
         
-    await this.ridesRepository.update(_ride);
+    await this.ridesRepository.update(ride);
+
+    const payload = {
+      ride,
+      rideId: ride.id,
+      status: RideStatus.PENDING,
+      isActive: true,
+      role: RideRole.PASSENGER,
+      userId: userId
+    } as RidesHistory;
+
+    await this.ridesHistoryService.create(payload);
   }
 
   public async cancelRide(userId: string, rideId: string): Promise<void> {
-    const _ride = await this.getById(rideId);
+    const ride = await this.getById(rideId);
 
-    _ride.updatedAt = new Date();
-    _ride.availableSeats = _ride.availableSeats++;
-    _ride.passengerIds = _ride.passengerIds?.filter(id => id !== userId);
+    ride.updatedAt = new Date();
+    ride.availableSeats = ride.availableSeats++;
+    ride.passengerIds = ride.passengerIds?.filter(id => id !== userId);
         
-    await this.ridesRepository.update(_ride);
+    await this.ridesRepository.update(ride);
+    await this.ridesHistoryService.cancelUserRide(rideId, userId);
+  }
+
+  public async driverCancelRide(userId: string, rideId: string): Promise<void> {
+    const ride = await this.getById(rideId);
+
+    ride.updatedAt = new Date();
+    ride.availableSeats = 0;
+    ride.isActive = false;
+        
+    await this.ridesRepository.update(ride);
+    await this.ridesHistoryService.cancelDriverRide(rideId, userId);
   }
 
   public async suggestRides(search: SearchRide): Promise<Ride[]> {
     if (!search.departureLatLng || !search.destinationLatLng) {
-      throw new Error("origin and destination are required.");
+      throw new Error("Origem e destino são obrigatórios!");
     }
 
     const now = new Date();
