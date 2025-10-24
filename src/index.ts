@@ -5,6 +5,7 @@ import { pageNotFoundHandler } from "./middlewares/page-not-found.middleware.js"
 import { errorHandler } from "./middlewares/error-handler.middleware.js";
 import { initializeApp as initializeFirebaseApp } from "firebase/app";
 import { auth } from "./middlewares/auth.middleware.js";
+import cors from 'cors';
 
 initializeApp();
 initializeFirebaseApp({
@@ -13,6 +14,8 @@ initializeFirebaseApp({
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+app.use(cors());
 
 auth(app);
 routes(app);

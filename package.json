@@ -33,13 +33,15 @@
     "file-type": "^21.0.0",
     "firebase": "^12.4.0",
     "firebase-admin": "^13.5.0",
-    "node-cache": "^5.1.2"
+    "node-cache": "^5.1.2",
+    "node-cron": "^4.2.1"
   },
   "devDependencies": {
     "@tsconfig/node20": "^20.1.6",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/node": "^24.8.1",
+    "@types/node-cron": "^3.0.11",
     "tsc-watch": "^7.2.0",
     "typescript": "^5.9.3"
   }

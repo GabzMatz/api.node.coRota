@@ -10,8 +10,9 @@ export interface User extends Base{
   password: string;
   companyId: string;
   addressId: string;
-  workSchedule?: Date;
   hasCar: boolean;
+  workSchedule?: Date;
+  carInfo?: string;
 };
 
 export const createUserSchema = Joi.object().keys({
@@ -23,9 +24,10 @@ export const createUserSchema = Joi.object().keys({
   password: Joi.string().min(6).required(),
   companyId: Joi.string().required(),
   addressId: Joi.string().required(),
-  workSchedule: Joi.date().optional(),
   hasCar: Joi.boolean().required().default(false),
-  isActive: Joi.boolean().default(true)
+  isActive: Joi.boolean().default(true),
+  workSchedule: Joi.date().optional(),
+  carInfo: Joi.string().optional().default("")
 });
 
 export const updateUserSchema = Joi.object().keys({
@@ -37,9 +39,10 @@ export const updateUserSchema = Joi.object().keys({
   companyId: Joi.string().required(),
   addressId: Joi.string().required(),
   hasCar: Joi.boolean().required(),
-  workSchedule: Joi.date().optional(),
   password: Joi.string().min(6).optional(),
-  isActive: Joi.boolean().default(true)
+  isActive: Joi.boolean().default(true),
+  workSchedule: Joi.date().optional(),
+  carInfo: Joi.string().optional().default("")
 });
 
 export const loginSchema = Joi.object().keys({
