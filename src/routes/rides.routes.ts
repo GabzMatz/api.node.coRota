@@ -32,7 +32,9 @@ ridesRoute.put(`${base}/:id`, celebrate({ [Segments.BODY]: rideSchema}), asyncHa
 
 ridesRoute.put(`${base}/:rideId/choose/:userId`, celebrate({ [Segments.PARAMS]: rideIdsSchema }), asyncHandler(RidesController.chooseRide));
 
-ridesRoute.put(`${base}/:rideId/calcel/:userId`, celebrate({ [Segments.PARAMS]: rideIdsSchema }), asyncHandler(RidesController.cancelPassengerRide));
+ridesRoute.put(`${base}/:rideId/calcel-passenger/:userId`, celebrate({ [Segments.PARAMS]: rideIdsSchema }), asyncHandler(RidesController.cancelPassengerRide));
+
+ridesRoute.put(`${base}/:rideId/calcel-driver/:userId`, celebrate({ [Segments.PARAMS]: rideIdsSchema }), asyncHandler(RidesController.cancelDriverRide));
 
 //#endregion
 

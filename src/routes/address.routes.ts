@@ -9,7 +9,7 @@ import { idSchema } from "../models/base.model.js";
 const addressRoute = express.Router();
 const base = "/address";
 
-addressRoute.post(`${base}`, celebrate({ [Segments.BODY]: addressSchema}), asyncHandler(AddressController.create));
+addressRoute.post(`${base}/create`, celebrate({ [Segments.BODY]: addressSchema}), asyncHandler(AddressController.create));
 
 addressRoute.get(`${base}`, asyncHandler(AddressController.getAll));
 
