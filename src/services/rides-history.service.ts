@@ -1,16 +1,23 @@
 import { NotFoundError } from "../errors/not-found.error.js";
 import { RidesHistory, RideStatus } from "../models/rides-history.model.js";
 import { RidesHistoryRepository } from "../repositories/rides-history.repository.js";
-import { RidesService } from "./rides.service.js";
 
 export class RidesHistoryService {
-  constructor() {
-    this.ridesHistoryRepository = new RidesHistoryRepository();
-    this.ridesService = new RidesService();
-  }
   
-  private ridesHistoryRepository: RidesHistoryRepository;
-  private ridesService: RidesService;
+  constructor(
+    private ridesHistoryRepository = new RidesHistoryRepository()
+  ) { }
+  
+  public async completeRideHistories(rideId: string): Promise<void> {
+    const histories = await this.ridesHistoryRepository.getRidesHistoryByRideId(rideId);
+
+    for (const history of histories) {
+      history.status = RideStatus.COMPLETED;
+      history.isActive = false;
+      history.updatedAt = new Date();
+      await this.ridesHistoryRepository.update(history.id, history);
+    }
+  }
 
   public async getAll(): Promise<RidesHistory[]> {
     return await this.ridesHistoryRepository.getAll();
@@ -41,15 +48,11 @@ export class RidesHistoryService {
     _rideHistory.status = rideHistory.status;
     _rideHistory.role = rideHistory.role;
         
-    await this.ridesHistoryRepository.update(_rideHistory);
+    await this.ridesHistoryRepository.update(id, _rideHistory);
   }
 
   public async getByUserId(userId: string): Promise<RidesHistory[]> {    
     const ridesHistory = await this.ridesHistoryRepository.getRidesHistoryByUserId(userId);
-
-    ridesHistory.forEach(async r => {
-      r.ride = await this.ridesService.getById(r.rideId);
-    });
 
     return ridesHistory;
   }
@@ -60,7 +63,7 @@ export class RidesHistoryService {
     rideHistory.updatedAt = new Date();
     rideHistory.status = RideStatus.CANCELED;
         
-    await this.ridesHistoryRepository.update(rideHistory);
+    await this.ridesHistoryRepository.update(rideHistory.id, rideHistory);
     rideHistory.ride.passengerIds?.forEach(async id => {
       await this.cancelUserRide(rideId, id);
     })
@@ -72,7 +75,7 @@ export class RidesHistoryService {
     _rideHistory.updatedAt = new Date();
     _rideHistory.status = RideStatus.CANCELED;
         
-    await this.ridesHistoryRepository.update(_rideHistory);
+    await this.ridesHistoryRepository.update(_rideHistory.id, _rideHistory);
   }
 
 }

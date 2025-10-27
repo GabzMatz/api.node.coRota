@@ -32,7 +32,6 @@ export class AddressService {
     const _address = await this.getById(id);
     
     _address.updatedAt = new Date();
-    _address.createdAt = address.createdAt;
     _address.isActive = address.isActive;
     _address.street = address.street;
     _address.number = address.number;
@@ -44,7 +43,7 @@ export class AddressService {
     _address.long = address.long;
     _address.complement = address.complement;
         
-    await this.addressRepository.update(_address);
+    await this.addressRepository.update(id, _address);
   }
 
 }

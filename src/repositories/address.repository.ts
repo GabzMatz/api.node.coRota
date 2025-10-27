@@ -19,14 +19,20 @@ export class AddressRepository {
 
   public async getById(id: string): Promise<Address | null> {
     const doc = await this.collection.doc(id).get();
-    return doc.data() as Address ?? null;
+
+    if (!doc.exists) return null;
+
+    return {
+      ...(doc.data() as Address),
+      id: doc.id
+    };
   }
 
   public async create(address: Address): Promise<void> {
     await this.collection.add(address);
   }
 
-  public async update(address: Address): Promise<void> {
-    await this.collection.doc(address.id).set(address);
+  public async update(id: string, address: Address): Promise<void> {
+    await this.collection.doc(id).set(address);
   }
 }

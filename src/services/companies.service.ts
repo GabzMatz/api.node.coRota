@@ -32,13 +32,12 @@ export class CompanyService {
     const _company = await this.getById(id);
     
     _company.updatedAt = new Date();
-    _company.createdAt = company.createdAt;
     _company.isActive = company.isActive;
     _company.name = company.name;
     _company.addressId = company.addressId;
-    _company.usersIds = company.usersIds;
+    _company.usersEmails = company.usersEmails;
         
-    await this.companiesRepository.update(_company);
+    await this.companiesRepository.update(id, _company);
   }
 
   public async search(search: SearchCompany): Promise<Company[]> {

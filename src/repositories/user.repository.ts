@@ -23,13 +23,13 @@ export class UserRepository {
     const user = await this.collection.doc(userId).get();
 
     return {
-      id: user.id,
-      ...user.data()
+      ...user.data(),
+      id: user.id
     } as User;
   }
 
-  public async update(user: User): Promise<void> {
-    await this.collection.doc(user.id).set(user);
+  public async update(id: string, user: User): Promise<void> {
+    await this.collection.doc(id).set(user, { merge: true });
   }
 
   public async delete(userId: string): Promise<void> {

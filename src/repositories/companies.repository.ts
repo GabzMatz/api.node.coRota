@@ -19,15 +19,21 @@ export class CompaniesRepository {
 
   public async getById(id: string): Promise<Company | null> {
     const doc = await this.collection.doc(id).get();
-    return doc.data() as Company ?? null;
+
+    if (!doc.exists) return null;
+
+    return {
+      ...(doc.data() as Company),
+      id: doc.id
+    };
   }
 
   public async create(company: Company): Promise<void> {
     await this.collection.add(company);
   }
 
-  public async update(company: Company): Promise<void> {
-    await this.collection.doc(company.id).set(company);
+  public async update(id: string, company: Company): Promise<void> {
+    await this.collection.doc(id).set(company);
   }
 
   public async delete(companyId: string): Promise<void> {

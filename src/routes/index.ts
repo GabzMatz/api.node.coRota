@@ -4,6 +4,7 @@ import addressRoute from "./address.routes.js";
 import { authRoute } from "./auth.route.js";
 import { usersRoute } from "./user.route.js";
 import companyRoute from "./company.routes.js";
+import ridesHistoryRoute from "./rides-history.routes.js";
 
 export const routes = (app: express.Express) => {
   app.use(express.json()); 
@@ -12,6 +13,7 @@ export const routes = (app: express.Express) => {
     usersRoute,
     ridesRoute,
     companyRoute,
-    addressRoute
+    addressRoute,
+    ridesHistoryRoute
   );
 }

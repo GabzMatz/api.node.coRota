@@ -19,7 +19,13 @@ export class RidesRepository {
 
   public async getById(id: string): Promise<Ride | null> {
     const doc = await this.collection.doc(id).get();
-    return doc.data() as Ride ?? null;
+
+    if (!doc.exists) return null;
+    
+    return {
+      ...(doc.data() as Ride),
+      id: doc.id
+    };
   }
 
   public async getRidesByUserId(userId: string): Promise<Ride[]> {
@@ -46,7 +52,7 @@ export class RidesRepository {
     return { ...(snapshot.data() as Ride), id: ref.id };
   }
 
-  public async update(ride: Ride): Promise<void> {
-    await this.collection.doc(ride.id).set(ride);
+  public async update(id: string, ride: Ride): Promise<void> {
+    await this.collection.doc(id).set(ride);
   }
 }

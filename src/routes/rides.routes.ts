@@ -28,7 +28,7 @@ ridesRoute.get(`${base}`, asyncHandler(RidesController.getAll));
 
 ridesRoute.get(`${base}/:id`, celebrate({ [Segments.PARAMS]: idSchema }), asyncHandler(RidesController.getById));
 
-ridesRoute.put(`${base}`, celebrate({ [Segments.BODY]: rideSchema}), asyncHandler(RidesController.update));
+ridesRoute.put(`${base}/:id`, celebrate({ [Segments.BODY]: rideSchema}), asyncHandler(RidesController.update));
 
 ridesRoute.put(`${base}/:rideId/choose/:userId`, celebrate({ [Segments.PARAMS]: rideIdsSchema }), asyncHandler(RidesController.chooseRide));
 

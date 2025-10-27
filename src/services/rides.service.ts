@@ -10,15 +10,37 @@ import { RidesHistoryService } from "./rides-history.service.js";
 const MEET_THRESHOLD_METERS = Number(process.env.MEET_THRESHOLD_METERS || 3000);
 
 export class RidesService {
-  constructor() {
+
+  constructor(
+    private ridesHistoryService = new RidesHistoryService(),
+    private ridesRepository = new RidesRepository(),
+  ) {
     this.mapboxService = new MapService();
-    this.ridesRepository = new RidesRepository();
-    this.ridesHistoryService = new RidesHistoryService();
   }
-  
-  private ridesRepository: RidesRepository;
+
   private mapboxService: MapService;
-  private ridesHistoryService: RidesHistoryService;
+
+  public async checkAndCompleteExpiredRides(): Promise<void> {
+    const rides = await this.ridesRepository.getAll();
+    const now = new Date();
+
+    for (const ride of rides) {
+      const rideDateTime = new Date(`${ride.date}T${ride.time}`);
+
+      if (ride.isActive && rideDateTime <= now) {
+        try {
+          ride.isActive = false;
+          ride.updatedAt = new Date();
+          await this.ridesRepository.update(ride.id, ride);
+
+          await this.ridesHistoryService.completeRideHistories(ride.id);
+          console.log(`Ride ${ride.id} marcado como COMPLETED`);
+        } catch (err) {
+          console.error(`Erro ao completar ride ${ride.id}:`, err);
+        }
+      }
+    }
+  }
 
   public async getAll(): Promise<Ride[]> {
     const rides = await this.ridesRepository.getAll();
@@ -57,7 +79,6 @@ export class RidesService {
     const _ride = await this.getById(id);
     
     _ride.updatedAt = new Date();
-    _ride.createdAt = ride.createdAt;
     _ride.isActive = ride.isActive;
     _ride.driverId = ride.driverId;
     _ride.departureLatLng = ride.departureLatLng;
@@ -69,7 +90,7 @@ export class RidesService {
     _ride.pricePerPassenger = ride.pricePerPassenger;
     _ride.passengerIds = ride.passengerIds;
         
-    await this.ridesRepository.update(_ride);
+    await this.ridesRepository.update(id, _ride);
   }
 
   public async chooseRide(userId: string, rideId: string): Promise<void> {
@@ -82,7 +103,7 @@ export class RidesService {
     ride.availableSeats = ride.availableSeats--;
     ride.passengerIds?.push(userId);
         
-    await this.ridesRepository.update(ride);
+    await this.ridesRepository.update(rideId, ride);
 
     const payload = {
       ride,
@@ -103,7 +124,7 @@ export class RidesService {
     ride.availableSeats = ride.availableSeats++;
     ride.passengerIds = ride.passengerIds?.filter(id => id !== userId);
         
-    await this.ridesRepository.update(ride);
+    await this.ridesRepository.update(rideId, ride);
     await this.ridesHistoryService.cancelUserRide(rideId, userId);
   }
 
@@ -114,7 +135,7 @@ export class RidesService {
     ride.availableSeats = 0;
     ride.isActive = false;
         
-    await this.ridesRepository.update(ride);
+    await this.ridesRepository.update(rideId, ride);
     await this.ridesHistoryService.cancelDriverRide(rideId, userId);
   }
 

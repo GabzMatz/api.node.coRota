@@ -30,8 +30,9 @@ export class UserService {
     const userAuth = await this.authService.create(user);
     user.id = userAuth.uid;
     user.createdAt = new Date();
+    user.updatedAt = new Date();
 
-    await this.userRepository.update(user);
+    await this.userRepository.update(userAuth.uid, user);
     await this.authService.verifyEmail(user.corporateEmail);
   }
 
@@ -44,6 +45,7 @@ export class UserService {
 
     _user.corporateEmail = user.corporateEmail;
     _user.cpf = user.cpf;
+    _user.updatedAt = new Date();
     _user.firstName = user.firstName;
     _user.lastName = user.lastName;
     _user.phone = user.phone;
@@ -53,7 +55,7 @@ export class UserService {
     _user.hasCar = user.hasCar;
     
     await this.authService.update(userId, user);
-    await this.userRepository.update(_user);
+    await this.userRepository.update(userId, _user);
   }
 
   public async delete(userId: string): Promise<void> {

@@ -36,10 +36,11 @@ export const rideSchema = Joi.object().keys({
   destinationLatLng: Joi.array().items(Joi.number()).required(),
   date: Joi.date().required(),
   time: Joi.string().required(),
-  availableSeats: Joi.number().integer().min(1).required(),
+  allSeats: Joi.number().integer().min(1).required(),
   pricePerPassenger: Joi.number().precision(2).min(0).required(),
   passengerIds: Joi.array().items(Joi.string()).default([]),
   isActive: Joi.boolean().default(true),
+  availableSeats: Joi.number().integer().optional().default(0),
 });
 
 export const searchRideSchema = Joi.object().keys({

@@ -16,7 +16,7 @@ companyRoute.post(`${base}/search`, celebrate({ [Segments.BODY]: searchCompanySc
 
 companyRoute.get(`${base}/:id`, celebrate({ [Segments.PARAMS]: idSchema }), asyncHandler(CompanyController.getById));
 
-companyRoute.put(`${base}`, celebrate({ [Segments.BODY]: companySchema}), asyncHandler(CompanyController.update));
+companyRoute.put(`${base}/:id`, celebrate({ [Segments.BODY]: companySchema}), asyncHandler(CompanyController.update));
 
 companyRoute.delete(`${base}/:id`, celebrate({ [Segments.PARAMS]: idSchema }), asyncHandler(CompanyController.delete));
 

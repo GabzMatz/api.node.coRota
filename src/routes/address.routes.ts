@@ -15,6 +15,6 @@ addressRoute.get(`${base}`, asyncHandler(AddressController.getAll));
 
 addressRoute.get(`${base}/:id`, celebrate({ [Segments.PARAMS]: idSchema }), asyncHandler(AddressController.getById));
 
-addressRoute.put(`${base}`, celebrate({ [Segments.BODY]: addressSchema}), asyncHandler(AddressController.update));
+addressRoute.put(`${base}/:id`, celebrate({ [Segments.BODY]: addressSchema}), asyncHandler(AddressController.update));
 
 export default addressRoute;
