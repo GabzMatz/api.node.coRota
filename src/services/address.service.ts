@@ -23,9 +23,9 @@ export class AddressService {
     return address;
   }
 
-  public async create(address: Address): Promise<void> {
+  public async create(address: Address): Promise<Address> {
     address.createdAt = new Date();
-    await this.addressRepository.create(address);
+    return await this.addressRepository.create(address);
   }
 
   public async update(id: string, address: Address): Promise<void> {

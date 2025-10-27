@@ -28,8 +28,14 @@ export class AddressRepository {
     };
   }
 
-  public async create(address: Address): Promise<void> {
-    await this.collection.add(address);
+  public async create(address: Address): Promise<Address> {
+    const docRef = await this.collection.add(address);
+    const doc = await docRef.get();
+
+    return {
+      ...doc.data() as Address,
+      id: doc.id
+    };
   }
 
   public async update(id: string, address: Address): Promise<void> {

@@ -15,7 +15,7 @@ export class AddressController {
   public static async create(req: Request, res: Response, next: NextFunction) {
     const data = await new AddressService().create(req.body);
 
-    res.status(201).send({
+    res.status(200).send({
       message: "Endereço criado com sucesso!",
       data
     });
