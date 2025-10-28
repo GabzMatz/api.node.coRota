@@ -1,11 +1,12 @@
 import { Joi } from "celebrate";
 import { Base, LatLng } from "./base.model.js";
+import { Timestamp } from "firebase-admin/firestore";
 
 export interface Ride extends Base {
   driverId: string;
   departureLatLng: LatLng;
   destinationLatLng: LatLng;
-  date: Date;
+  date: Timestamp;
   time: string;
   allSeats: number;
   availableSeats: number;
@@ -26,8 +27,8 @@ export interface Route {
 export interface SearchRide {
   departureLatLng: LatLng;
   destinationLatLng: LatLng;
-  date: Date;
-  time: string;
+  date: Date | null;
+  time: string | null;
 }
 
 export const rideSchema = Joi.object().keys({
@@ -46,8 +47,8 @@ export const rideSchema = Joi.object().keys({
 export const searchRideSchema = Joi.object().keys({
   departureLatLng: Joi.array().items(Joi.number()).required(),
   destinationLatLng: Joi.array().items(Joi.number()).required(),
-  date: Joi.date().required(),
-  time: Joi.string().required(),
+  date: Joi.date().optional().default(null),
+  time: Joi.string().optional().default(null),
 });
 
 export const rideIdsSchema = Joi.object({

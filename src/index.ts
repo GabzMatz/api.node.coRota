@@ -22,4 +22,6 @@ routes(app);
 pageNotFoundHandler(app);
 errorHandler(app);
 
+import('./cron/ride-completion-cron.js');
+
 app.listen(port);

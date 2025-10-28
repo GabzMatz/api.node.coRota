@@ -9,7 +9,7 @@ export class RidesHistoryService {
   ) { }
   
   public async completeRideHistories(rideId: string): Promise<void> {
-    const histories = await this.ridesHistoryRepository.getRidesHistoryByRideId(rideId);
+    const histories = (await this.ridesHistoryRepository.getRidesHistoryByRideId(rideId)).filter(h => h.status !== RideStatus.CANCELED);
 
     for (const history of histories) {
       history.status = RideStatus.COMPLETED;

@@ -25,7 +25,11 @@ export class RidesService {
     const now = new Date();
 
     for (const ride of rides) {
-      const rideDateTime = new Date(`${ride.date}T${ride.time}`);
+      // Converts Timestamp to Date
+      const dateObj = ride.date.toDate();
+      const dateString = dateObj.toISOString().split('T')[0];
+
+      const rideDateTime = new Date(`${dateString}T${ride.time}`);
 
       if (ride.isActive && rideDateTime <= now) {
         try {
@@ -34,7 +38,6 @@ export class RidesService {
           await this.ridesRepository.update(ride.id, ride);
 
           await this.ridesHistoryService.completeRideHistories(ride.id);
-          console.log(`Ride ${ride.id} marcado como COMPLETED`);
         } catch (err) {
           console.error(`Erro ao completar ride ${ride.id}:`, err);
         }
@@ -96,11 +99,11 @@ export class RidesService {
   public async chooseRide(userId: string, rideId: string): Promise<void> {
     const ride = await this.getById(rideId);
 
-    if (ride.allSeats <= ride.availableSeats)
+    if (ride.availableSeats <= 0)
       throw new ValidationError("O carro não tem mais assentos disponíveis!");
 
     ride.updatedAt = new Date();
-    ride.availableSeats = ride.availableSeats--;
+    ride.availableSeats = ride.availableSeats - 1;
     ride.passengerIds?.push(userId);
         
     await this.ridesRepository.update(rideId, ride);
@@ -121,7 +124,7 @@ export class RidesService {
     const ride = await this.getById(rideId);
 
     ride.updatedAt = new Date();
-    ride.availableSeats = ride.availableSeats++;
+    ride.availableSeats = ride.availableSeats + 1;
     ride.passengerIds = ride.passengerIds?.filter(id => id !== userId);
         
     await this.ridesRepository.update(rideId, ride);
@@ -149,7 +152,11 @@ export class RidesService {
     const matches: Ride[] = [];
 
     for (const ride of rides) {
-      const rideDateTime = new Date(`${ride.date}T${ride.time}`);
+      const dateObj = ride.date.toDate();
+      const dateString = dateObj.toISOString().split('T')[0];
+
+      const rideDateTime = new Date(`${dateString}T${ride.time}`);
+      
       if (rideDateTime <= now) continue;
   
       const driverOrigin: LatLng = ride.departureLatLng;

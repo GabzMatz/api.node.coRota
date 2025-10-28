@@ -22,6 +22,6 @@ export const addressSchema = Joi.object().keys({
   zipCode: Joi.string().required(),
   lat: Joi.string().required(),
   long: Joi.string().required(),
-  complement: Joi.string().optional(),
+  complement: Joi.string().optional().default(""),
   isActive: Joi.boolean().default(true)
 });
