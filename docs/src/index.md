@@ -1,31 +1,45 @@
 # index.ts
 
-## Descrição
-Este arquivo é responsável por inicializar a aplicação backend com **Express** e **Firebase Admin SDK**.  
-Ele cria um servidor HTTP simples que responde a uma rota de teste (`/`).  
-Serve como ponto de entrada básico para validar se o servidor e a integração com o Firebase estão funcionando corretamente.
+## 📘 Propósito
+Descreve o objetivo principal do módulo `index.ts` localizado em `src`. Este arquivo serve como ponto de inicialização do módulo principal da aplicação Node.js, configurando servidor Express, middlewares, rotas e serviços externos.
 
-## Estrutura do Código
-- Importação do **Express** e do módulo **Firebase Admin**  
-- Inicialização da aplicação Firebase  
-- Criação da instância do servidor Express  
-- Definição de uma rota GET (`/`) que retorna uma mensagem simples  
-- Inicialização do servidor na porta 3000
+## ⚙️ Fluxo de Funcionamento
+Este arquivo inicializa e configura toda a aplicação Node.js. É responsável por:
+- Inicializar aplicações Firebase (Admin e Client)
+- Configurar servidor Express com middlewares
+- Registrar middleware CORS para requisições cross-origin
+- Configurar middleware de autenticação
+- Registrar todas as rotas da aplicação
+- Configurar middlewares de tratamento de erros
+- Iniciar cron job para completar corridas expiradas
+- Iniciar servidor HTTP na porta configurada
 
-### Explicação
+## 🔗 Depende de
+**Dependências internas:**
+- `./routes/index.js` - Configuração de todas as rotas
+- `./middlewares/page-not-found.middleware.js` - Middleware de rotas não encontradas
+- `./middlewares/error-handler.middleware.js` - Middleware de tratamento de erros
+- `./middlewares/auth.middleware.js` - Middleware de autenticação
+- `./cron/ride-completion-cron.js` - Cron job para corridas expiradas
 
-- **Importações:**  
-  `express` é o framework usado para gerenciar rotas e requisições HTTP.  
-  `initializeApp` vem do pacote `firebase-admin/app` e é usado para habilitar o uso de serviços do Firebase no backend.
+**Dependências externas:**
+- `express` - Framework web para Node.js
+- `firebase-admin/app` - SDK do Firebase Admin (initializeApp)
+- `firebase/app` - SDK do Firebase Client (initializeApp)
+- `cors` - Middleware para requisições cross-origin
+- `process.env` - Variáveis de ambiente (PORT, API_KEY)
 
-- **initializeApp():**  
-  Inicializa a aplicação Firebase, permitindo futuras interações com autenticação, banco de dados, storage etc.
+## 🧩 Usado por
+- Sistema de inicialização da aplicação
+- Processo principal do Node.js
+- Servidor de produção
 
-- **const app = express():**  
-  Cria a instância principal do servidor Express.
-
-- **app.get("/", ...):**  
-  Define uma rota do tipo GET que responde com a mensagem `"Rota teste"`, útil para verificar se o servidor está ativo.
-
-- **app.listen(3000):**  
-  Faz o servidor escutar na porta **3000**, tornando-o acessível localmente via `http://localhost:3000/`.
+## 🗒️ Observações
+- Arquivo principal de inicialização da aplicação
+- Configuração completa do servidor Express
+- Inicialização de serviços Firebase (Admin e Client)
+- Middleware CORS habilitado para todas as origens (para testes)
+- Porta configurável via variável de ambiente (padrão 3000)
+- Cron job iniciado automaticamente
+- Middlewares registrados em ordem específica
+- Essencial para funcionamento da aplicação
