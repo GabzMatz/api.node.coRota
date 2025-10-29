@@ -6,8 +6,9 @@ export class AuthController {
     const { corporateEmail, password } = req.body;
     const userRecord = await new AuthService().login(corporateEmail, password);
     const token = await userRecord.user.getIdToken(true);
+    console.log(userRecord)
 
-    res.send({ token: token });
+    res.send({ token: token, id: userRecord.user.uid, email: userRecord.user.email });
   }
 
   public static async recovery(req: Request, res: Response): Promise<void> {
