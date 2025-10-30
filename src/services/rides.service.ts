@@ -29,7 +29,7 @@ export class RidesService {
       const dateObj = ride.date.toDate();
       const dateString = dateObj.toISOString().split('T')[0];
 
-      const rideDateTime = new Date(`${dateString}T${ride.time}`);
+      const rideDateTime = new Date(`${dateString}T${ride.endTime}`);
 
       if (ride.isActive && rideDateTime <= now) {
         try {
@@ -87,7 +87,8 @@ export class RidesService {
     _ride.departureLatLng = ride.departureLatLng;
     _ride.destinationLatLng = ride.destinationLatLng;
     _ride.date = ride.date;
-    _ride.time = ride.time;
+    _ride.startTime = ride.startTime;
+    _ride.endTime = ride.endTime;
     _ride.allSeats = ride.allSeats;
     _ride.availableSeats = ride.availableSeats;
     _ride.pricePerPassenger = ride.pricePerPassenger;
@@ -155,7 +156,7 @@ export class RidesService {
       const dateObj = ride.date.toDate();
       const dateString = dateObj.toISOString().split('T')[0];
 
-      const rideDateTime = new Date(`${dateString}T${ride.time}`);
+      const rideDateTime = new Date(`${dateString}T${ride.startTime}`);
       
       if (rideDateTime <= now) continue;
   

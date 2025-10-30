@@ -1,4 +1,4 @@
-import { MapService } from "../services/mapbox.service.js";
+import { MapService } from "./mapbox.service.js";
 import { Route } from "../models/ride.model.js";
 import { ValidationError } from "../errors/validation.error.js";
 
