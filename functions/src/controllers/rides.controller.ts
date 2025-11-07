@@ -63,6 +63,7 @@ export class RidesController {
 
   public static async suggest(req: Request, res: Response) {
     const search = req.body as SearchRide;
+    search.userId = req.user?.id ?? search.userId;
 
     const data = await new RidesService().suggestRides(search);
 

@@ -30,6 +30,7 @@ export interface SearchRide {
   destinationLatLng: LatLng;
   date: Date | null;
   time: string | null;
+  userId?: string | null;
 }
 
 export const rideSchema = Joi.object().keys({
@@ -51,6 +52,7 @@ export const searchRideSchema = Joi.object().keys({
   destinationLatLng: Joi.array().items(Joi.number()).required(),
   date: Joi.date().optional().default(null),
   time: Joi.string().optional().default(null),
+  userId: Joi.string().optional().default(null),
 });
 
 export const rideIdsSchema = Joi.object({

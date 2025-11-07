@@ -171,6 +171,10 @@ export class RidesService {
     const matches: Array<Omit<Ride, 'date'> & { date: string }> = [];
 
     for (const ride of activeRides) {
+      if (search.userId && (ride.driverId === search.userId || ride.passengerIds?.includes(search.userId))) {
+        continue;
+      }
+
       const dateObj = ride.date.toDate();
       const dateString = dateObj.toISOString().split('T')[0];
 
