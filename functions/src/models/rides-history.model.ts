@@ -1,6 +1,6 @@
 import { Joi } from "celebrate";
 import { Base } from "./base.model.js";
-import { Ride } from "./ride.model.js";
+import { Ride, RideDto } from "./ride.model.js";
 
 export enum RideRole {
   DRIVER = "driver",
@@ -20,6 +20,8 @@ export interface RidesHistory extends Base {
   status: RideStatus;
   ride: Ride;
 }
+
+export type RidesHistoryDto = Omit<RidesHistory, 'ride'> & { ride: RideDto | null };
 
 export const rideHistorySchema = Joi.object().keys({
   userId: Joi.string().required(),

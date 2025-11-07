@@ -1,6 +1,8 @@
 import { NotFoundError } from "../errors/not-found.error.js";
-import { RidesHistory, RideStatus } from "../models/rides-history.model.js";
+import { RidesHistory, RideStatus, RidesHistoryDto } from "../models/rides-history.model.js";
 import { RidesHistoryRepository } from "../repositories/rides-history.repository.js";
+import { Ride, RideDto } from "../models/ride.model.js";
+import { Timestamp } from "firebase-admin/firestore";
 
 export class RidesHistoryService {
   
@@ -19,18 +21,15 @@ export class RidesHistoryService {
     }
   }
 
-  public async getAll(): Promise<RidesHistory[]> {
-    return await this.ridesHistoryRepository.getAll();
+  public async getAll(): Promise<RidesHistoryDto[]> {
+    const histories = await this.ridesHistoryRepository.getAll();
+    return histories.map(history => this.formatRideHistoryForFrontend(history));
   }
 
-  public async getById(id: string): Promise<RidesHistory> {
-    const rideHistory = await this.ridesHistoryRepository.getById(id);
+  public async getById(id: string): Promise<RidesHistoryDto> {
+    const rideHistory = await this.getByIdInternal(id);
 
-    if (!rideHistory) {
-        throw new NotFoundError("Histórico não encontrado!");
-    }
-
-    return rideHistory;
+    return this.formatRideHistoryForFrontend(rideHistory);
   }
 
   public async create(rideHistory: RidesHistory): Promise<void> {
@@ -39,7 +38,7 @@ export class RidesHistoryService {
   }
 
   public async update(id: string, rideHistory: RidesHistory): Promise<void> {
-    const _rideHistory = await this.getById(id);
+    const _rideHistory = await this.getByIdInternal(id);
     
     _rideHistory.updatedAt = new Date();
     _rideHistory.isActive = rideHistory.isActive;
@@ -51,10 +50,10 @@ export class RidesHistoryService {
     await this.ridesHistoryRepository.update(id, _rideHistory);
   }
 
-  public async getByUserId(userId: string): Promise<RidesHistory[]> {    
+  public async getByUserId(userId: string): Promise<RidesHistoryDto[]> {    
     const ridesHistory = await this.ridesHistoryRepository.getRidesHistoryByUserId(userId);
 
-    return ridesHistory;
+    return ridesHistory.map(history => this.formatRideHistoryForFrontend(history));
   }
 
   public async cancelDriverRide(rideId: string): Promise<void> {
@@ -71,6 +70,38 @@ export class RidesHistoryService {
     }
   }
 
+  private formatRideHistoryForFrontend(history: RidesHistory): RidesHistoryDto {
+    return {
+      ...history,
+      ride: history.ride ? this.formatRideForFrontend(history.ride) : null,
+    };
+  }
+
+  private formatRideForFrontend(ride: Ride): RideDto {
+    return {
+      ...ride,
+      date: this.normalizeDateToString(ride.date),
+    };
+  }
+
+  private normalizeDateToString(date: Timestamp | Date | string): string {
+    let dateObj: Date;
+
+    if (date instanceof Timestamp) {
+      dateObj = date.toDate();
+    } else if (date instanceof Date) {
+      dateObj = date;
+    } else {
+      dateObj = new Date(date);
+    }
+
+    const year = dateObj.getUTCFullYear();
+    const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getUTCDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+  }
+
   public async cancelUserRide(rideId: string, userId: string): Promise<void> {  
     const _rideHistory = await this.ridesHistoryRepository.getRidesHistoryByUserAndRideId(userId, rideId);
     
@@ -79,6 +110,16 @@ export class RidesHistoryService {
     _rideHistory.isActive = false;
         
     await this.ridesHistoryRepository.update(_rideHistory.id, _rideHistory);
+  }
+
+  private async getByIdInternal(id: string): Promise<RidesHistory> {
+    const rideHistory = await this.ridesHistoryRepository.getById(id);
+
+    if (!rideHistory) {
+      throw new NotFoundError("Histórico não encontrado!");
+    }
+
+    return rideHistory;
   }
 
 }

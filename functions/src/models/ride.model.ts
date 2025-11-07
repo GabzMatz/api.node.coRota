@@ -16,6 +16,8 @@ export interface Ride extends Base {
   extraMeters: number;
 };
 
+export type RideDto = Omit<Ride, 'date'> & { date: string };
+
 export interface Route {
   street: string;
   city: string;

@@ -1,7 +1,7 @@
 import { RidesRepository } from "../repositories/rides.repository.js";
 import { LatLng } from "../models/base.model.js";
 import { MapService } from "./mapbox.service.js";
-import { Ride, SearchRide } from "../models/ride.model.js";
+import { Ride, RideDto, SearchRide } from "../models/ride.model.js";
 import { NotFoundError } from "../errors/not-found.error.js";
 import { ValidationError } from "../errors/validation.error.js";
 import { RideRole, RidesHistory, RideStatus } from "../models/rides-history.model.js";
@@ -48,7 +48,7 @@ export class RidesService {
     }
   }
 
-  public async getAll(): Promise<Array<Omit<Ride, 'date'> & { date: string }>> {
+  public async getAll(): Promise<RideDto[]> {
     const rides = await this.ridesRepository.getAll();
 
     const filteredRides = rides.filter(ride => ride.isActive === true  && ride.availableSeats > 0);
@@ -56,7 +56,7 @@ export class RidesService {
     return filteredRides.map(ride => this.formatRideForFrontend(ride));
   }
 
-  public async getById(id: string): Promise<Omit<Ride, 'date'> & { date: string }> {
+  public async getById(id: string): Promise<RideDto> {
     const ride = await this.getByIdInternal(id);
 
     return this.formatRideForFrontend(ride);
@@ -160,7 +160,7 @@ export class RidesService {
     await this.ridesHistoryService.cancelDriverRide(rideId);
   }
 
-  public async suggestRides(search: SearchRide): Promise<Array<Omit<Ride, 'date'> & { date: string }>> {
+  public async suggestRides(search: SearchRide): Promise<Array<RideDto & { extraMeters: number }>> {
     if (!search.departureLatLng || !search.destinationLatLng) {
       throw new Error("Origem e destino são obrigatórios!");
     }
@@ -168,7 +168,7 @@ export class RidesService {
     const now = new Date();
     const allRides = await this.ridesRepository.getAll();
     const activeRides = allRides.filter(ride => ride.isActive === true && ride.availableSeats > 0);
-    const matches: Array<Omit<Ride, 'date'> & { date: string }> = [];
+    const matches: Array<RideDto & { extraMeters: number }> = [];
 
     for (const ride of activeRides) {
       if (search.userId && (ride.driverId === search.userId || ride.passengerIds?.includes(search.userId))) {
@@ -250,7 +250,7 @@ export class RidesService {
     return `${year}-${month}-${day}`;
   }
 
-  private formatRideForFrontend(ride: Ride): Omit<Ride, 'date'> & { date: string } {
+  private formatRideForFrontend(ride: Ride): RideDto {
     return {
       ...ride,
       date: this.convertTimestampToDateString(ride.date)
@@ -266,16 +266,16 @@ export class RidesService {
         const year = parseInt(parts[0], 10);
         const month = parseInt(parts[1], 10) - 1; 
         const day = parseInt(parts[2], 10);
-        normalizedDate = new Date(Date.UTC(year, month, day, 0, 0, 0, 0));
+        normalizedDate = new Date(year, month, day, 0, 0, 0, 0);
       } else {
         normalizedDate = new Date(date);
       }
     } else {
-      const year = date.getUTCFullYear();
-      const month = date.getUTCMonth();
-      const day = date.getUTCDate();
+      const year = date.getFullYear();
+      const month = date.getMonth();
+      const day = date.getDate();
 
-      normalizedDate = new Date(Date.UTC(year, month, day, 0, 0, 0, 0));
+      normalizedDate = new Date(year, month, day, 0, 0, 0, 0);
     }
     
     return Timestamp.fromDate(normalizedDate);
