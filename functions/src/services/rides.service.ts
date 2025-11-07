@@ -6,6 +6,7 @@ import { NotFoundError } from "../errors/not-found.error.js";
 import { ValidationError } from "../errors/validation.error.js";
 import { RideRole, RidesHistory, RideStatus } from "../models/rides-history.model.js";
 import { RidesHistoryService } from "./rides-history.service.js";
+import { Timestamp } from "firebase-admin/firestore";
 
 const MEET_THRESHOLD_METERS = Number(process.env.MEET_THRESHOLD_METERS || 3000);
 
@@ -45,25 +46,27 @@ export class RidesService {
     }
   }
 
-  public async getAll(): Promise<Ride[]> {
+  public async getAll(): Promise<Array<Omit<Ride, 'date'> & { date: string }>> {
     const rides = await this.ridesRepository.getAll();
 
-    return rides.filter(ride => ride.isActive === true  && ride.availableSeats > 0);
+    const filteredRides = rides.filter(ride => ride.isActive === true  && ride.availableSeats > 0);
+    
+    return filteredRides.map(ride => this.formatRideForFrontend(ride));
   }
 
-  public async getById(id: string): Promise<Ride> {
-    const ride = await this.ridesRepository.getById(id);
+  public async getById(id: string): Promise<Omit<Ride, 'date'> & { date: string }> {
+    const ride = await this.getByIdInternal(id);
 
-    if (!ride) {
-        throw new NotFoundError("Corrida não encontrada!");
-    }
-
-    return ride;
+    return this.formatRideForFrontend(ride);
   }
 
   public async create(ride: Ride, userId: string): Promise<void> {
     ride.availableSeats = ride.allSeats;
     ride.createdAt = new Date();
+  
+    if (ride.date instanceof Date || typeof ride.date === 'string') {
+      ride.date = this.convertDateToTimestamp(ride.date as Date | string);
+    }
     const _ride = await this.ridesRepository.create(ride);
 
     const payload = {
@@ -79,14 +82,19 @@ export class RidesService {
   }
 
   public async update(id: string, ride: Ride): Promise<void> {
-    const _ride = await this.getById(id);
+    const _ride = await this.getByIdInternal(id);
     
     _ride.updatedAt = new Date();
     _ride.isActive = ride.isActive;
     _ride.driverId = ride.driverId;
     _ride.departureLatLng = ride.departureLatLng;
     _ride.destinationLatLng = ride.destinationLatLng;
-    _ride.date = ride.date;
+    
+    if (ride.date instanceof Date || typeof ride.date === 'string') {
+      _ride.date = this.convertDateToTimestamp(ride.date as Date | string);
+    } else {
+      _ride.date = ride.date;
+    }
     _ride.startTime = ride.startTime;
     _ride.endTime = ride.endTime;
     _ride.allSeats = ride.allSeats;
@@ -98,7 +106,7 @@ export class RidesService {
   }
 
   public async chooseRide(userId: string, rideId: string): Promise<void> {
-    const ride = await this.getById(rideId);
+    const ride = await this.getByIdInternal(rideId);
 
     if (ride.availableSeats <= 0)
       throw new ValidationError("O carro não tem mais assentos disponíveis!");
@@ -122,7 +130,7 @@ export class RidesService {
   }
 
   public async cancelRide(userId: string, rideId: string): Promise<void> {
-    const ride = await this.getById(rideId);
+    const ride = await this.getByIdInternal(rideId);
 
     ride.updatedAt = new Date();
     ride.availableSeats = ride.availableSeats + 1;
@@ -133,7 +141,7 @@ export class RidesService {
   }
 
   public async driverCancelRide(userId: string, rideId: string): Promise<void> {
-    const ride = await this.getById(rideId);
+    const ride = await this.getByIdInternal(rideId);
 
     ride.updatedAt = new Date();
     ride.availableSeats = 0;
@@ -143,16 +151,17 @@ export class RidesService {
     await this.ridesHistoryService.cancelDriverRide(rideId, userId);
   }
 
-  public async suggestRides(search: SearchRide): Promise<Ride[]> {
+  public async suggestRides(search: SearchRide): Promise<Array<Omit<Ride, 'date'> & { date: string }>> {
     if (!search.departureLatLng || !search.destinationLatLng) {
       throw new Error("Origem e destino são obrigatórios!");
     }
 
     const now = new Date();
-    const rides = await this.getAll();
-    const matches: Ride[] = [];
+    const allRides = await this.ridesRepository.getAll();
+    const activeRides = allRides.filter(ride => ride.isActive === true && ride.availableSeats > 0);
+    const matches: Array<Omit<Ride, 'date'> & { date: string }> = [];
 
-    for (const ride of rides) {
+    for (const ride of activeRides) {
       const dateObj = ride.date.toDate();
       const dateString = dateObj.toISOString().split('T')[0];
 
@@ -176,8 +185,9 @@ export class RidesService {
       const extra = withPickupDistance - origDistance;
 
       if (extra <= MEET_THRESHOLD_METERS) {
+        const formattedRide = this.formatRideForFrontend(ride);
         matches.push({
-          ...ride,
+          ...formattedRide,
           extraMeters: extra,
         });
       }
@@ -188,4 +198,54 @@ export class RidesService {
 
     return matches;
   }
+
+  private convertTimestampToDateString(timestamp: Timestamp): string {
+    const dateObj = timestamp.toDate();
+    const year = dateObj.getUTCFullYear();
+    const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getUTCDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  private formatRideForFrontend(ride: Ride): Omit<Ride, 'date'> & { date: string } {
+    return {
+      ...ride,
+      date: this.convertTimestampToDateString(ride.date)
+    };
+  }
+
+  private convertDateToTimestamp(date: Date | string): Timestamp {
+    let normalizedDate: Date;
+    
+    if (typeof date === 'string') {
+      const parts = date.split('-');
+      if (parts.length === 3) {
+        const year = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1; 
+        const day = parseInt(parts[2], 10);
+        normalizedDate = new Date(Date.UTC(year, month, day, 0, 0, 0, 0));
+      } else {
+        normalizedDate = new Date(date);
+      }
+    } else {
+      const year = date.getUTCFullYear();
+      const month = date.getUTCMonth();
+      const day = date.getUTCDate();
+
+      normalizedDate = new Date(Date.UTC(year, month, day, 0, 0, 0, 0));
+    }
+    
+    return Timestamp.fromDate(normalizedDate);
+  }
+
+  private async getByIdInternal(id: string): Promise<Ride> {
+    const ride = await this.ridesRepository.getById(id);
+
+    if (!ride) {
+        throw new NotFoundError("Corrida não encontrada!");
+    }
+
+    return ride;
+  }
+
 }
