@@ -9,6 +9,8 @@ import { RidesHistoryService } from "./rides-history.service.js";
 import { Timestamp } from "firebase-admin/firestore";
 
 const MEET_THRESHOLD_METERS = Number(process.env.MEET_THRESHOLD_METERS || 3000);
+const DRIVER_CHANGE_THRESHOLD_HOURS = 8;
+const DRIVER_CHANGE_THRESHOLD_MS = DRIVER_CHANGE_THRESHOLD_HOURS * 60 * 60 * 1000;
 
 export class RidesService {
 
@@ -83,6 +85,7 @@ export class RidesService {
 
   public async update(id: string, ride: Ride): Promise<void> {
     const _ride = await this.getByIdInternal(id);
+    this.ensureDriverCanModifyRide(_ride);
     
     _ride.updatedAt = new Date();
     _ride.isActive = ride.isActive;
@@ -142,6 +145,7 @@ export class RidesService {
 
   public async driverCancelRide(userId: string, rideId: string): Promise<void> {
     const ride = await this.getByIdInternal(rideId);
+    this.ensureDriverCanModifyRide(ride);
 
     ride.updatedAt = new Date();
     ride.availableSeats = 0;
@@ -197,6 +201,36 @@ export class RidesService {
     matches.sort((a, b) => a.extraMeters - b.extraMeters);
 
     return matches;
+  }
+
+  private getRideStartDateTime(ride: Ride): Date {
+    const rideDate = ride.date.toDate();
+    const [hoursStr, minutesStr = "0"] = ride.startTime.split(":");
+    const hours = Number(hoursStr);
+    const minutes = Number(minutesStr);
+
+    if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+      throw new ValidationError("Horário de início da corrida inválido.");
+    }
+
+    return new Date(Date.UTC(
+      rideDate.getUTCFullYear(),
+      rideDate.getUTCMonth(),
+      rideDate.getUTCDate(),
+      hours,
+      minutes,
+      0,
+      0,
+    ));
+  }
+
+  private ensureDriverCanModifyRide(ride: Ride): void {
+    const rideStartDateTime = this.getRideStartDateTime(ride);
+    const timeUntilRideMs = rideStartDateTime.getTime() - Date.now();
+
+    if (timeUntilRideMs < DRIVER_CHANGE_THRESHOLD_MS) {
+      throw new ValidationError(`Não é possível editar ou cancelar a corrida faltando menos de ${DRIVER_CHANGE_THRESHOLD_HOURS} horas para o início.`);
+    }
   }
 
   private convertTimestampToDateString(timestamp: Timestamp): string {
