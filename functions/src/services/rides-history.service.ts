@@ -57,23 +57,26 @@ export class RidesHistoryService {
     return ridesHistory;
   }
 
-  public async cancelDriverRide(rideId: string, userId: string): Promise<void> {    
-    const rideHistory = await this.ridesHistoryRepository.getRidesHistoryByUserAndRideId(userId, rideId);
-    
-    rideHistory.updatedAt = new Date();
-    rideHistory.status = RideStatus.CANCELED;
-        
-    await this.ridesHistoryRepository.update(rideHistory.id, rideHistory);
-    rideHistory.ride.passengerIds?.forEach(async id => {
-      await this.cancelUserRide(rideId, id);
-    })
+  public async cancelDriverRide(rideId: string): Promise<void> {
+    const histories = await this.ridesHistoryRepository.getRidesHistoryByRideId(rideId);
+
+    const updatedAt = new Date();
+
+    for (const history of histories) {
+      history.updatedAt = updatedAt;
+      history.status = RideStatus.CANCELED;
+      history.isActive = false;
+
+      await this.ridesHistoryRepository.update(history.id, history);
+    }
   }
 
-  public async cancelUserRide(rideId: string, userId: string): Promise<void> {    
+  public async cancelUserRide(rideId: string, userId: string): Promise<void> {  
     const _rideHistory = await this.ridesHistoryRepository.getRidesHistoryByUserAndRideId(userId, rideId);
     
     _rideHistory.updatedAt = new Date();
     _rideHistory.status = RideStatus.CANCELED;
+    _rideHistory.isActive = false;
         
     await this.ridesHistoryRepository.update(_rideHistory.id, _rideHistory);
   }

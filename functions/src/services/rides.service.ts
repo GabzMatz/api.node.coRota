@@ -147,12 +147,17 @@ export class RidesService {
     const ride = await this.getByIdInternal(rideId);
     this.ensureDriverCanModifyRide(ride);
 
+    if (ride.driverId !== userId) {
+      throw new ValidationError("Apenas o motorista pode cancelar a corrida.");
+    }
+
     ride.updatedAt = new Date();
-    ride.availableSeats = 0;
+    ride.availableSeats = ride.allSeats;
     ride.isActive = false;
+    ride.passengerIds = [];
         
     await this.ridesRepository.update(rideId, ride);
-    await this.ridesHistoryService.cancelDriverRide(rideId, userId);
+    await this.ridesHistoryService.cancelDriverRide(rideId);
   }
 
   public async suggestRides(search: SearchRide): Promise<Array<Omit<Ride, 'date'> & { date: string }>> {
