@@ -5,14 +5,14 @@ Descreve o objetivo principal do módulo `rides.controller.ts` localizado em `co
 
 ## ⚙️ Fluxo de Funcionamento
 Este controller recebe requisições HTTP relacionadas às corridas e chama o `RidesService` correspondente para processar a lógica de negócio. É responsável por:
-- Listar todas as corridas (`GET /rides`)
-- Buscar corrida por ID (`GET /rides/:id`)
-- Criar nova corrida (`POST /rides`)
-- Atualizar corrida existente (`PUT /rides/:id`)
-- Escolher corrida como passageiro (`POST /rides/:rideId/choose/:userId`)
-- Cancelar corrida como passageiro (`DELETE /rides/:rideId/passenger/:userId`)
-- Cancelar corrida como motorista (`DELETE /rides/:rideId/driver/:userId`)
-- Sugerir corridas (`POST /rides/suggest`)
+- Listar todas as corridas (`GET /ride`)
+- Buscar corrida por ID (`GET /ride/:id`)
+- Criar nova corrida (`POST /ride`)
+- Atualizar corrida existente (`PUT /ride/:id`)
+- Escolher corrida como passageiro (`PUT /ride/:rideId/choose/:userId`)
+- Cancelar corrida como passageiro (`PUT /ride/:rideId/calcel-passenger/:userId`)
+- Cancelar corrida como motorista (`PUT /ride/:rideId/calcel-driver/:userId`)
+- Sugerir corridas (`POST /ride/suggest-rides`)
 
 ## 🔗 Depende de
 **Dependências internas:**

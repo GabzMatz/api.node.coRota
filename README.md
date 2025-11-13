@@ -153,7 +153,7 @@ O projeto utiliza **Firebase Firestore** como banco de dados NoSQL com as seguin
 
 ### Autenticação
 - `POST /auth/login` - Login de usuário
-- `POST /auth/validate` - Validação de token
+- `POST /auth/recovery` - Recuperação de senha
 
 ### Usuários
 - `GET /users` - Lista todos os usuários
@@ -173,10 +173,12 @@ O projeto utiliza **Firebase Firestore** como banco de dados NoSQL com as seguin
 ### Corridas
 - `POST /ride` - Cria nova corrida
 - `GET /ride` - Lista corridas
+- `GET /ride/:id` - Busca corrida por ID
 - `PUT /ride/:id` - Atualiza corrida
 - `POST /ride/suggest-rides` - Sugere corridas baseado em origem/destino
-- `POST /ride/choose-ride` - Passageiro escolhe uma corrida
-- `POST /ride/cancel-ride` - Cancela participação em corrida
+- `PUT /ride/:rideId/choose/:userId` - Passageiro escolhe uma corrida
+- `PUT /ride/:rideId/calcel-passenger/:userId` - Passageiro cancela participação
+- `PUT /ride/:rideId/calcel-driver/:userId` - Motorista cancela corrida
 
 ### Geocodificação e Rotas
 - `GET /ride/geocode` - Busca endereços via Mapbox
@@ -184,13 +186,14 @@ O projeto utiliza **Firebase Firestore** como banco de dados NoSQL com as seguin
 
 ### Endereços
 - `GET /address` - Lista endereços do usuário
-- `POST /address` - Adiciona novo endereço
+- `GET /address/:id` - Busca endereço por ID
+- `POST /address/create` - Adiciona novo endereço
 - `PUT /address/:id` - Atualiza endereço
-- `DELETE /address/:id` - Remove endereço
 
 ### Histórico de Corridas
-- `GET /rides-history` - Lista histórico de corridas do usuário
-- `GET /rides-history/:id` - Busca histórico específico
+- `GET /ride-history` - Lista histórico de corridas
+- `GET /ride-history/:id` - Busca histórico específico por ID
+- `GET /ride-history/user/:id` - Busca histórico de corridas de um usuário
 
 > **Nota**: A maioria dos endpoints requer autenticação via token Firebase JWT no header `Authorization: Bearer <token>`
 

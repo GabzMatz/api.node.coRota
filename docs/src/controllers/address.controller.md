@@ -5,10 +5,10 @@ Descreve o objetivo principal do módulo `address.controller.ts` localizado em `
 
 ## ⚙️ Fluxo de Funcionamento
 Este controller recebe requisições HTTP relacionadas aos endereços e chama o `AddressService` correspondente para processar a lógica de negócio. É responsável por:
-- Listar todos os endereços (`GET /addresses`)
-- Buscar endereço por ID (`GET /addresses/:id`)
-- Criar novo endereço (`POST /addresses`)
-- Atualizar endereço existente (`PUT /addresses/:id`)
+- Listar todos os endereços (`GET /address`)
+- Buscar endereço por ID (`GET /address/:id`)
+- Criar novo endereço (`POST /address/create`)
+- Atualizar endereço existente (`PUT /address/:id`)
 
 ## 🔗 Depende de
 **Dependências internas:**

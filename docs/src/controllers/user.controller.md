@@ -7,7 +7,7 @@ Descreve o objetivo principal do módulo `user.controller.ts` localizado em `con
 Este controller recebe requisições HTTP relacionadas aos usuários e chama o `UserService` correspondente para processar a lógica de negócio. É responsável por:
 - Listar todos os usuários (`GET /users`)
 - Buscar usuário por ID (`GET /users/:id`)
-- Criar novo usuário (`POST /users`)
+- Criar novo usuário (`POST /users/register`)
 - Atualizar usuário existente (`PUT /users/:id`)
 - Deletar usuário (`DELETE /users/:id`)
 

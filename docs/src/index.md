@@ -12,7 +12,7 @@ Este arquivo inicializa e configura toda a aplicação Node.js. É responsável 
 - Registrar todas as rotas da aplicação
 - Configurar middlewares de tratamento de erros
 - Iniciar cron job para completar corridas expiradas
-- Iniciar servidor HTTP na porta configurada
+- Exportar Cloud Function do Firebase (`api`) via `onRequest`
 
 ## 🔗 Depende de
 **Dependências internas:**
@@ -26,13 +26,15 @@ Este arquivo inicializa e configura toda a aplicação Node.js. É responsável 
 - `express` - Framework web para Node.js
 - `firebase-admin/app` - SDK do Firebase Admin (initializeApp)
 - `firebase/app` - SDK do Firebase Client (initializeApp)
+- `firebase-functions/v1/https` - SDK do Firebase Functions (onRequest)
 - `cors` - Middleware para requisições cross-origin
-- `process.env` - Variáveis de ambiente (PORT, API_KEY)
+- `process.env` - Variáveis de ambiente (API_KEY)
+- `dotenv` - Carregamento de variáveis de ambiente
 
 ## 🧩 Usado por
+- Firebase Cloud Functions (deploy)
+- Emulador Firebase Functions (desenvolvimento local)
 - Sistema de inicialização da aplicação
-- Processo principal do Node.js
-- Servidor de produção
 
 ## 🌐 Deploy
 A aplicação é implantada como uma **Cloud Function do Firebase** e está disponível em:

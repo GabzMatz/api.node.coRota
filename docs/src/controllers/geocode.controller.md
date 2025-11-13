@@ -5,7 +5,7 @@ Descreve o objetivo principal do módulo `geocode.controller.ts` localizado em `
 
 ## ⚙️ Fluxo de Funcionamento
 Este controller recebe requisições HTTP relacionadas à geocodificação e chama o `GeocodeService` correspondente para processar a lógica de negócio. É responsável por:
-- Buscar endereços por query string (`GET /geocode/search?q=termo`)
+- Buscar endereços por query string (`GET /ride/geocode?q=termo`)
 
 ## 🔗 Depende de
 **Dependências internas:**
@@ -15,7 +15,7 @@ Este controller recebe requisições HTTP relacionadas à geocodificação e cha
 - `express` - Framework web para Node.js (Request, Response, NextFunction)
 
 ## 🧩 Usado por
-- `../routes/geocode.routes.ts` - Mapeamento das rotas de geocodificação
+- `../routes/rides.routes.ts` - Mapeamento das rotas de geocodificação (dentro das rotas de corridas)
 - Sistema de busca de endereços
 - Sistema de criação de corridas
 

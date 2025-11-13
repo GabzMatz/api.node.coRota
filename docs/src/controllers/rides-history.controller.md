@@ -5,11 +5,9 @@ Descreve o objetivo principal do módulo `rides-history.controller.ts` localizad
 
 ## ⚙️ Fluxo de Funcionamento
 Este controller recebe requisições HTTP relacionadas ao histórico de corridas e chama o `RidesHistoryService` correspondente para processar a lógica de negócio. É responsável por:
-- Listar todo o histórico de corridas (`GET /rides-history`)
-- Buscar histórico por ID (`GET /rides-history/:id`)
-- Criar novo registro de histórico (`POST /rides-history`)
-- Atualizar registro de histórico (`PUT /rides-history/:id`)
-- Buscar histórico por usuário (`GET /rides-history/user/:id`)
+- Listar todo o histórico de corridas (`GET /ride-history`)
+- Buscar histórico por ID (`GET /ride-history/:id`)
+- Buscar histórico por usuário (`GET /ride-history/user/:id`)
 
 ## 🔗 Depende de
 **Dependências internas:**
@@ -26,6 +24,6 @@ Este controller recebe requisições HTTP relacionadas ao histórico de corridas
 ## 🗒️ Observações
 - Controller especializado em operações de histórico de corridas
 - Utiliza métodos estáticos para facilitar o uso nas rotas
-- Implementa operações CRUD completas
+- Apenas operações de consulta (GET) estão expostas nas rotas
 - Funcionalidade específica para buscar histórico por usuário
-- Retorna mensagens de sucesso padronizadas
+- Retorna dados do histórico de corridas
