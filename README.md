@@ -5,6 +5,11 @@
 API desenvolvida em **Node.js** utilizando **Express** e **Firebase Admin SDK** para o projeto **CoRota**, uma plataforma web que conecta colaboradores de empresas para o compartilhamento de caronas.  
 Seu objetivo é reduzir custos de transporte, diminuir a emissão de poluentes e incentivar a mobilidade urbana sustentável por meio do uso inteligente de rotas e horários compatíveis entre motoristas e passageiros.
 
+## 🌐 Deploy
+
+- **Frontend**: [https://appreactcorota.vercel.app/](https://appreactcorota.vercel.app/)
+- **API**: [https://us-central1-corota-fe133.cloudfunctions.net/api](https://us-central1-corota-fe133.cloudfunctions.net/api)
+
 ## 🚀 Tecnologias Utilizadas
 
 - [Node.js](https://nodejs.org/)
@@ -20,12 +25,9 @@ Seu objetivo é reduzir custos de transporte, diminuir a emissão de poluentes e
 
 ### Variáveis de Ambiente
 
-Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis:
+Crie um arquivo `.env` na pasta `functions` com as seguintes variáveis:
 
 ```env
-# Servidor
-PORT=3000
-
 # Firebase
 API_KEY=sua_api_key_do_firebase
 
@@ -38,29 +40,55 @@ MEET_THRESHOLD_METERS=3000
 
 ### Arquivos Necessários
 
-- `firebase-adminsdk.json` - Credenciais do Firebase Admin SDK
+- `functions/firebase-adminsdk.json` - Credenciais do Firebase Admin SDK (não versionado no Git por segurança)
+
+### Firebase Functions
+
+Este projeto é uma **Cloud Function do Firebase**, então você precisa ter:
+- Conta Firebase configurada
+- Firebase CLI instalado (`npm install -g firebase-tools`)
+- Projeto Firebase inicializado (`firebase init`)
 
 ## ▶️ Como Executar
 
-1. Instale as dependências:
+### Desenvolvimento Local
+
+1. Navegue até a pasta `functions`:
+
+   ```bash
+   cd functions
+   ```
+
+2. Instale as dependências:
 
    ```bash
    npm i
    ```
 
-2. Configure as variáveis de ambiente (arquivo `.env`)
+3. Configure as variáveis de ambiente (arquivo `.env` na pasta `functions`)
 
-3. Execute o servidor:
+4. Execute o emulador do Firebase:
 
    ```bash
    npm start
    ```
-
-4. Acesse no navegador ou via cURL:
-
+   e em outro terminal, dentro da pasta functions execute
+   ```bash
+   npm run build:watch
    ```
-   http://localhost:3000/
-   ```
+
+5. A API estará disponível no emulador local
+
+### Deploy
+
+Para fazer deploy da API no Firebase Functions:
+
+```bash
+cd functions
+npm run deploy
+```
+
+A API será implantada em: `https://us-central1-corota-fe133.cloudfunctions.net/api`
 
 ## 🏗️ Arquitetura
 
@@ -121,29 +149,93 @@ O projeto utiliza **Firebase Firestore** como banco de dados NoSQL com as seguin
 - **Cron Jobs** - Tarefas automáticas para completar corridas expiradas
 - **Notificações** - Sistema de notificações para usuários
 
+## 📡 Endpoints Principais
+
+### Autenticação
+- `POST /auth/login` - Login de usuário
+- `POST /auth/validate` - Validação de token
+
+### Usuários
+- `GET /users` - Lista todos os usuários
+- `GET /users/:id` - Busca usuário por ID
+- `POST /users/register` - Registro de novo usuário
+- `PUT /users/:id` - Atualiza dados do usuário
+- `DELETE /users/:id` - Remove usuário
+
+### Empresas
+- `GET /companies` - Lista todas as empresas
+- `GET /companies/:id` - Busca empresa por ID
+- `POST /companies` - Cria nova empresa
+- `POST /companies/search` - Busca empresas (público)
+- `PUT /companies/:id` - Atualiza empresa
+- `DELETE /companies/:id` - Remove empresa
+
+### Corridas
+- `POST /ride` - Cria nova corrida
+- `GET /ride` - Lista corridas
+- `PUT /ride/:id` - Atualiza corrida
+- `POST /ride/suggest-rides` - Sugere corridas baseado em origem/destino
+- `POST /ride/choose-ride` - Passageiro escolhe uma corrida
+- `POST /ride/cancel-ride` - Cancela participação em corrida
+
+### Geocodificação e Rotas
+- `GET /ride/geocode` - Busca endereços via Mapbox
+- `POST /ride/meeting-point` - Calcula ponto de encontro entre usuários
+
+### Endereços
+- `GET /address` - Lista endereços do usuário
+- `POST /address` - Adiciona novo endereço
+- `PUT /address/:id` - Atualiza endereço
+- `DELETE /address/:id` - Remove endereço
+
+### Histórico de Corridas
+- `GET /rides-history` - Lista histórico de corridas do usuário
+- `GET /rides-history/:id` - Busca histórico específico
+
+> **Nota**: A maioria dos endpoints requer autenticação via token Firebase JWT no header `Authorization: Bearer <token>`
+
 ## 🛠️ Desenvolvimento
 
 ### Scripts Disponíveis
 
 ```bash
-# Iniciar servidor em modo desenvolvimento
+# Iniciar emulador Firebase em modo desenvolvimento
 npm start
+
+# Build do projeto TypeScript
+npm run build
+
+# Build em modo watch
+npm run build:watch
+
+# Lint do código
+npm run lint
+
+# Deploy para Firebase Functions
+npm run deploy
+
+# Visualizar logs das Cloud Functions
+npm run logs
 ```
 
 ### Estrutura do Projeto
 
 ```
-src/
-├── @types/          # Extensões de tipos TypeScript
-├── controllers/     # Controladores HTTP
-├── cron/           # Tarefas agendadas
-├── errors/         # Erros customizados
-├── middlewares/    # Middlewares Express
-├── models/         # Modelos de dados e validações
-├── repositories/   # Camada de acesso a dados
-├── routes/         # Definição de rotas
-├── services/       # Lógica de negócio
-└── index.ts        # Arquivo principal
+functions/
+├── src/
+│   ├── @types/          # Extensões de tipos TypeScript
+│   ├── controllers/     # Controladores HTTP
+│   ├── cron/           # Tarefas agendadas
+│   ├── errors/         # Erros customizados
+│   ├── middlewares/    # Middlewares Express
+│   ├── models/         # Modelos de dados e validações
+│   ├── repositories/   # Camada de acesso a dados
+│   ├── routes/         # Definição de rotas
+│   ├── services/       # Lógica de negócio
+│   └── index.ts        # Arquivo principal (Cloud Function)
+├── lib/                # Código compilado (TypeScript → JavaScript)
+├── package.json        # Dependências e scripts
+└── tsconfig.json       # Configuração TypeScript
 ```
 
 ### Padrões de Código

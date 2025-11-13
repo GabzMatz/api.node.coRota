@@ -34,12 +34,20 @@ Este arquivo inicializa e configura toda a aplicação Node.js. É responsável 
 - Processo principal do Node.js
 - Servidor de produção
 
+## 🌐 Deploy
+A aplicação é implantada como uma **Cloud Function do Firebase** e está disponível em:
+- **URL de Produção**: [https://us-central1-corota-fe133.cloudfunctions.net/api](https://us-central1-corota-fe133.cloudfunctions.net/api)
+- **Frontend**: [https://appreactcorota.vercel.app/](https://appreactcorota.vercel.app/)
+
+A função é exportada como `api` e exposta via `onRequest` do Firebase Functions, permitindo que o Express seja executado como uma Cloud Function HTTP.
+
 ## 🗒️ Observações
 - Arquivo principal de inicialização da aplicação
 - Configuração completa do servidor Express
 - Inicialização de serviços Firebase (Admin e Client)
-- Middleware CORS habilitado para todas as origens (para testes)
-- Porta configurável via variável de ambiente (padrão 3000)
+- Middleware CORS habilitado para todas as origens
+- Exporta Cloud Function do Firebase (`api`)
 - Cron job iniciado automaticamente
 - Middlewares registrados em ordem específica
 - Essencial para funcionamento da aplicação
+- Deploy realizado via Firebase Functions
