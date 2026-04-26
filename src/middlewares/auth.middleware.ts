@@ -6,6 +6,11 @@ import { UserService } from "../services/user.service.js";
 
 export const auth = (app: express.Express) => {
   app.use(async (req: Request, res: Response, next: NextFunction) => {
+    if (req.method === "OPTIONS") {
+      res.sendStatus(204);
+      return;
+    }
+
     if (req.method === 'POST' && (req.url.startsWith("/auth/login") || req.url.startsWith("/auth/recovery") || req.url.startsWith("/users/register") || req.url.startsWith("/companies/search") || req.url.startsWith("/address/create"))) {
       return next();
     }
