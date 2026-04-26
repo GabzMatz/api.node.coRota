@@ -16,6 +16,6 @@
     "noUnusedLocals": true // Sinaliza quando existem variáveis declaradas e não utilizadas
   },
   "compileOnSave": true,
-  "include": ["src/**/*", "functions/src/@types", "functions/src/controllers", "functions/src/cron", "functions/src/errors", "functions/src/middlewares", "functions/src/models", "functions/src/repositories", "functions/src/routes", "functions/src/services", "functions/src/index.js", "functions/src/index.ts"],
+  "include": ["src/**/*", "src/@types", "src/controllers", "src/cron", "src/errors", "src/middlewares", "src/models", "src/repositories", "src/routes", "src/services", "src/index.js", "src/index.ts"],
   "exclude": ["**/*.spec.ts"]
 }

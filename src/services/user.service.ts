@@ -1,4 +1,5 @@
 import { NotFoundError } from "../errors/not-found.error.js";
+import { ValidationError } from "../errors/validation.error.js";
 import { User } from "../models/user.model.js";
 import { UserRepository } from "../repositories/user.repository.js";
 import { AuthService } from "./auth.service.js";
@@ -43,18 +44,37 @@ export class UserService {
       throw new NotFoundError("Não foi possível atualizar o usuário!");
     }
 
-    _user.corporateEmail = user.corporateEmail;
-    _user.cpf = user.cpf;
     _user.updatedAt = new Date();
-    _user.firstName = user.firstName;
-    _user.lastName = user.lastName;
-    _user.phone = user.phone;
-    _user.companyId = user.companyId;
-    _user.addressId = user.addressId;
-    _user.workSchedule = user.workSchedule;
-    _user.hasCar = user.hasCar;
-    
-    await this.authService.update(userId, user);
+
+    if (typeof user.phone === "string") {
+      _user.phone = user.phone;
+    }
+
+    if (typeof user.photo === "string") {
+      _user.photo = user.photo;
+    }
+
+    if (typeof user.carInfo === "string") {
+      _user.carInfo = user.carInfo;
+      _user.hasCar = user.carInfo.trim().length > 0;
+
+      if (!_user.hasCar) {
+        delete _user.carSeats;
+      }
+    }
+
+    if (typeof user.carSeats !== "undefined") {
+      if (user.carSeats < 2) {
+        throw new ValidationError("A quantidade de lugares do veículo deve ser no mínimo 2.");
+      }
+      _user.carSeats = user.carSeats;
+      _user.hasCar = true;
+    }
+
+    if (_user.hasCar && (!_user.carInfo || _user.carInfo.trim().length === 0 || !_user.carSeats || _user.carSeats < 2)) {
+      throw new ValidationError("Para cadastrar um veículo, informe os dados do veículo e a quantidade de lugares.");
+    }
+
     await this.userRepository.update(userId, _user);
   }
 
