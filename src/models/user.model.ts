@@ -1,5 +1,8 @@
 import { Joi } from "celebrate";
 import { Base } from "./base.model.js";
+import { isValidBrazilianLicensePlate } from "../utils/license-plate.js";
+
+export type VehicleType = "car" | "motorcycle";
 
 export interface User extends Base{
   corporateEmail: string;
@@ -14,7 +17,9 @@ export interface User extends Base{
   workSchedule: Date | null;
   carInfo: string;
   carSeats?: number;
+  vehicleType?: VehicleType;
   photo?: string;
+  pushTokens?: Array<{ token: string; platform: string }>;
 };
 
 const MAX_PHOTO_DATA_URL_LENGTH = 700000;
@@ -51,16 +56,37 @@ export const createUserSchema = Joi.object().keys({
   isActive: Joi.boolean().default(true),
   workSchedule: Joi.date().optional().allow(null),
   carInfo: Joi.string().optional().default(""),
-  carSeats: Joi.number().integer().min(2).max(8).optional(),
+  carSeats: Joi.number().integer().min(1).max(8).optional(),
+  vehicleType: Joi.string().valid("car", "motorcycle").optional(),
   photo: photoSchema.optional(),
+}).custom((value, helpers) => {
+  if (value.hasCar && value.carInfo) {
+    const plateMatch = String(value.carInfo).match(/Placa:\s*([^|]+)/i);
+    const plate = plateMatch?.[1]?.trim() || "";
+    if (plate && !isValidBrazilianLicensePlate(plate)) {
+      return helpers.error("any.invalid", { message: "Placa inválida. Use o padrão antigo (ABC1234) ou Mercosul (ABC1D23)." });
+    }
+  }
+  return value;
 });
 
 export const updateUserSchema = Joi.object().keys({
   phone: Joi.string().trim().optional(),
   photo: photoSchema.optional(),
   carInfo: Joi.string().trim().allow("").optional(),
-  carSeats: Joi.number().integer().min(2).max(8).optional(),
-}).min(1);
+  carSeats: Joi.number().integer().min(1).max(8).optional(),
+  vehicleType: Joi.string().valid("car", "motorcycle").optional(),
+  clearVehicle: Joi.boolean().optional(),
+}).min(1).custom((value, helpers) => {
+  if (value.carInfo && value.carInfo.trim()) {
+    const plateMatch = String(value.carInfo).match(/Placa:\s*([^|]+)/i);
+    const plate = plateMatch?.[1]?.trim() || "";
+    if (plate && !isValidBrazilianLicensePlate(plate)) {
+      return helpers.error("any.invalid", { message: "Placa inválida. Use o padrão antigo (ABC1234) ou Mercosul (ABC1D23)." });
+    }
+  }
+  return value;
+});
 
 export const loginSchema = Joi.object().keys({
   corporateEmail: Joi.string().email().required(),
