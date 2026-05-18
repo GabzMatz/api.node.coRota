@@ -8,6 +8,8 @@ import { RideRole, RidesHistory, RideStatus } from "../models/rides-history.mode
 import { RidesHistoryService } from "./rides-history.service.js";
 import { Timestamp } from "firebase-admin/firestore";
 import { UserRepository } from "../repositories/user.repository.js";
+import { NotificationsService } from "./notifications.service.js";
+import type { PassengerPickup } from "../models/ride.model.js";
 
 const MEET_THRESHOLD_METERS = Number(process.env.MEET_THRESHOLD_METERS || 3000);
 const DRIVER_CHANGE_THRESHOLD_HOURS = 8;
@@ -77,9 +79,12 @@ export class RidesService {
       throw new ValidationError("Cadastre um veículo no perfil para criar corridas.");
     }
 
-    const maxAvailableSeats = driverCarSeats - 1;
-    if (ride.allSeats > maxAvailableSeats) {
-      throw new ValidationError(`Seu veículo permite no máximo ${maxAvailableSeats} assentos disponíveis.`);
+    // carSeats = lugares totais (inclui motorista); allSeats = vagas para passageiros na corrida
+    const maxPassengerSeats = Math.max(1, driverCarSeats - 1);
+    if (ride.allSeats > maxPassengerSeats) {
+      throw new ValidationError(
+        `Seu veículo tem ${driverCarSeats} lugares no total (incluindo o motorista). Você pode oferecer no máximo ${maxPassengerSeats} vaga(s) para passageiros.`
+      );
     }
 
     ride.driverId = userId;
@@ -145,8 +150,29 @@ export class RidesService {
     ride.updatedAt = new Date();
     ride.pickupMode = pickupMode;
     ride.meetingPoint = pickupMode === "meeting_point" ? (meetingPoint || null) : null;
+    ride.pickupPlanConfigured = true;
 
     await this.ridesRepository.update(rideId, ride);
+
+    const passengerIds = [...new Set(ride.passengerIds || [])];
+    const notifications = new NotificationsService();
+    const embarkLabel = pickupMode === "street_by_street"
+      ? "O motorista passará na sua rua."
+      : meetingPoint
+        ? `Ponto de encontro: ${meetingPoint.street}, ${meetingPoint.city}.`
+        : "O plano de embarque foi atualizado.";
+
+    await Promise.all(
+      passengerIds.map((passengerId) =>
+        notifications.notifyUser(
+          passengerId,
+          "Plano de embarque definido",
+          embarkLabel,
+          "pickup",
+          rideId
+        )
+      )
+    );
   }
 
   public async suggestMeetingPoints(rideId: string, userId: string): Promise<MeetingPointSuggestion[]> {
@@ -160,9 +186,7 @@ export class RidesService {
       throw new ValidationError("Ainda não há passageiros para sugerir pontos de encontro.");
     }
 
-    const passengerPoints: LatLng[] = passengerPickups
-      .map((pickup) => [Number(pickup.lat), Number(pickup.long)] as LatLng)
-      .filter(([lat, lng]) => !Number.isNaN(lat) && !Number.isNaN(lng) && lat !== 0 && lng !== 0);
+    const passengerPoints = await this.resolvePassengerPointsFromPickups(passengerPickups);
 
     if (passengerPoints.length === 0) {
       throw new ValidationError("Não foi possível localizar os endereços usados pelos passageiros na busca.");
@@ -214,14 +238,7 @@ export class RidesService {
       throw new ValidationError("Apenas o motorista pode visualizar o planejamento de embarque.");
     }
 
-    const passengerPickups = (ride.passengerPickups || []).filter((pickup) => {
-      const lat = Number(pickup.lat);
-      const lng = Number(pickup.long);
-      if (Number.isNaN(lat) || Number.isNaN(lng)) {
-        return false;
-      }
-      return true;
-    });
+    const passengerPickups = await this.enrichPassengerPickups(ride.passengerPickups || []);
 
     return {
       ride: this.formatRideForFrontend(ride),
@@ -260,14 +277,13 @@ export class RidesService {
     }
 
     const normalizedPickupAddress = pickupAddress.trim();
-    const hasValidLatLng = Array.isArray(pickupLatLng) && pickupLatLng.length === 2
-      && Number.isFinite(Number(pickupLatLng[0])) && Number.isFinite(Number(pickupLatLng[1]));
+    const coords = await this.resolvePickupCoordinates(normalizedPickupAddress, pickupLatLng);
 
     const passengerPickup = {
       userId,
       address: normalizedPickupAddress,
-      lat: hasValidLatLng ? Number(pickupLatLng![0]) : 0,
-      long: hasValidLatLng ? Number(pickupLatLng![1]) : 0,
+      lat: coords.lat,
+      long: coords.long,
     };
     const existingPickupIndex = ride.passengerPickups.findIndex((pickup) => pickup.userId === userId);
     if (existingPickupIndex >= 0) {
@@ -288,6 +304,14 @@ export class RidesService {
     } as RidesHistory;
 
     await this.ridesHistoryService.create(payload);
+
+    await new NotificationsService().notifyUser(
+      ride.driverId,
+      "Nova reserva",
+      "Um passageiro reservou assentos na sua corrida.",
+      "ride",
+      rideId
+    );
   }
 
   public async cancelRide(userId: string, rideId: string): Promise<void> {
@@ -455,6 +479,94 @@ export class RidesService {
     }
     
     return Timestamp.fromDate(normalizedDate);
+  }
+
+  private isValidCoordinate(lat: number, lng: number): boolean {
+    return Number.isFinite(lat) && Number.isFinite(lng) && !(lat === 0 && lng === 0);
+  }
+
+  private async geocodeAddress(address: string): Promise<LatLng | null> {
+    const query = address.trim();
+    if (!query) {
+      return null;
+    }
+
+    const results = await this.mapboxService.geocode(query, 1);
+    if (!results.length) {
+      return null;
+    }
+
+    const [lng, lat] = results[0].center;
+    if (!this.isValidCoordinate(lat, lng)) {
+      return null;
+    }
+
+    return [lat, lng];
+  }
+
+  private async resolvePickupCoordinates(
+    address: string,
+    pickupLatLng: number[] | null
+  ): Promise<{ lat: number; long: number }> {
+    const hasValidLatLng = Array.isArray(pickupLatLng) && pickupLatLng.length === 2
+      && Number.isFinite(Number(pickupLatLng[0])) && Number.isFinite(Number(pickupLatLng[1]));
+    if (hasValidLatLng) {
+      const lat = Number(pickupLatLng![0]);
+      const lng = Number(pickupLatLng![1]);
+      if (this.isValidCoordinate(lat, lng)) {
+        return { lat, long: lng };
+      }
+    }
+
+    if (!address.trim()) {
+      return { lat: 0, long: 0 };
+    }
+
+    const geocoded = await this.geocodeAddress(address);
+    if (!geocoded) {
+      throw new ValidationError("Não foi possível localizar o endereço informado para o embarque.");
+    }
+
+    return { lat: geocoded[0], long: geocoded[1] };
+  }
+
+  private async resolvePassengerPointsFromPickups(
+    passengerPickups: PassengerPickup[]
+  ): Promise<LatLng[]> {
+    const enriched = await this.enrichPassengerPickups(passengerPickups);
+    return enriched
+      .map((pickup) => [pickup.lat, pickup.long] as LatLng)
+      .filter(([lat, lng]) => this.isValidCoordinate(lat, lng));
+  }
+
+  private async enrichPassengerPickups(
+    passengerPickups: PassengerPickup[]
+  ): Promise<PassengerPickup[]> {
+    const enriched: PassengerPickup[] = [];
+
+    for (const pickup of passengerPickups) {
+      const lat = Number(pickup.lat);
+      const lng = Number(pickup.long);
+      if (this.isValidCoordinate(lat, lng)) {
+        enriched.push({ ...pickup, lat, long: lng });
+        continue;
+      }
+
+      if (!pickup.address?.trim()) {
+        continue;
+      }
+
+      const geocoded = await this.geocodeAddress(pickup.address);
+      if (geocoded) {
+        enriched.push({
+          ...pickup,
+          lat: geocoded[0],
+          long: geocoded[1],
+        });
+      }
+    }
+
+    return enriched;
   }
 
   private getCentroid(points: LatLng[]): LatLng {

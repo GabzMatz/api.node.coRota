@@ -16,6 +16,7 @@ export interface Ride extends Base {
   extraMeters: number;
   pickupMode?: PickupMode;
   meetingPoint?: Route | null;
+  pickupPlanConfigured?: boolean;
   passengerPickups?: PassengerPickup[];
 };
 
