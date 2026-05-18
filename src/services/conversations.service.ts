@@ -10,6 +10,7 @@ import {
   ConversationsRepository,
 } from "../repositories/conversations.repository.js";
 import { RidesRepository } from "../repositories/rides.repository.js";
+import { NotificationsService } from "./notifications.service.js";
 
 export class ConversationsService {
   constructor(
@@ -97,6 +98,20 @@ export class ConversationsService {
     );
 
     await this.conversationsRepository.updateLastMessage(conversationId, text);
+
+    const conversation = await this.conversationsRepository.getById(conversationId);
+    if (conversation) {
+      const recipientId = conversation.participantIds.find((id) => id !== userId);
+      if (recipientId) {
+        await new NotificationsService().notifyUser(
+          recipientId,
+          "Nova mensagem",
+          text.length > 80 ? `${text.slice(0, 77)}...` : text,
+          "message",
+          conversationId
+        );
+      }
+    }
 
     const createdAt = new Date();
 

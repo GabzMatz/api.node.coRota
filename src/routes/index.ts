@@ -6,6 +6,7 @@ import { usersRoute } from "./user.route.js";
 import companyRoute from "./company.routes.js";
 import ridesHistoryRoute from "./rides-history.routes.js";
 import conversationsRoute from "./conversations.routes.js";
+import notificationsRoute from "./notifications.routes.js";
 
 export const routes = (app: express.Express) => {
   app.use(express.json()); 
@@ -16,6 +17,7 @@ export const routes = (app: express.Express) => {
     companyRoute,
     addressRoute,
     ridesHistoryRoute,
-    conversationsRoute
+    conversationsRoute,
+    notificationsRoute
   );
 }
